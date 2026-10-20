@@ -83,7 +83,7 @@ async function get<T>(path: string, fallback: T): Promise<T> {
 }
 export const getChildAppDashboard = (id: string) => get<ChildAppDashboardResponse>(`/api/v1/child/${encodeURIComponent(id)}/dashboard`, {
   child_info: { name: mockChild.child_info.name, avatar_url: mockChild.child_info.avatar_url },
-  balance_block: { active_balance: Number(mockChild.balance_block.amount) - Number(mockPiggybank.total_saved_amount), piggybank_balance: mockChild.money_categories.piggy_bank.amount, currency: mockChild.balance_block.currency, card_mask: mockChild.balance_block.card_mask },
+  balance_block: { active_balance: Number(mockChild.balance_block?.amount ?? 0) - Number(mockPiggybank.total_saved_amount), piggybank_balance: mockChild.money_categories.piggy_bank.amount, currency: mockChild.balance_block?.currency ?? 'BYN', card_mask: mockChild.balance_block?.card_mask ?? null },
   goals: mockPiggybank.goals.map(goal => ({ goal_id: goal.goal_id, title: goal.title, current_amount: goal.current_amount, target_amount: goal.target_amount, currency: goal.currency })),
   tasks: mockTasks.tasks.map(task => ({ task_id: task.task_id, title: task.title, reward_amount: task.reward_amount, currency: task.currency, status: task.status })),
   recent_transactions: [],
