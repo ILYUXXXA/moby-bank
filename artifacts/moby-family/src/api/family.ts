@@ -60,7 +60,7 @@ async function get<T>(path: string, fallback: T): Promise<T> {
   }
 }
 export const getFamily = () => get<FamilyResponse>(`/api/v1/family/my?family_id=${encodeURIComponent(FAMILY_ID)}`, mockFamily);
-export const getChild = (childId: string) => get<ChildResponse>(`/api/v1/children/${encodeURIComponent(childId)}, mockChild);
+export const getChild = (childId: string) => get<ChildResponse>(`/api/v1/children/${encodeURIComponent(childId)}`, mockChild);
 export const getChildPiggybank = (childId: string) => get<PiggybankResponse>(`/api/v1/children/${encodeURIComponent(childId)}/piggybank`, mockPiggybank);
 export const getChildTasks = (childId: string) => get<TasksResponse>(`/api/v1/children/${encodeURIComponent(childId)}/tasks`, mockTasks);
 export const getChildTransactions = (childId: string, from: string, to: string) => get<TransactionsResponse>(`/api/v1/children/${encodeURIComponent(childId)}/transactions?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`, mockTransactions);
