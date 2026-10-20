@@ -1,16 +1,15 @@
 import type { FamilyResponse, ChildResponse, PiggybankResponse, TasksResponse, TransactionsResponse, AnalyticsResponse } from '../api/family';
-import { PARENT_USER_ID, CHILD_USER_ID } from '../config/userIds';
+import { PARENT_USER_ID, CHILD_USER_ID, FAMILY_ID } from '../config/userIds';
 
-const FAMILY_ID = '00000000-0000-4000-8000-000000000001';
 export const mockFamily: FamilyResponse = {
   family_id: FAMILY_ID,
   parents: [
     { id: PARENT_USER_ID, name: 'Мама', role: 'MOTHER', avatar_url: null, family_id: FAMILY_ID },
-    { id: 'mock-parent-user-id-2', name: 'Папа', role: 'FATHER', avatar_url: null, family_id: FAMILY_ID },
+    { id: '11111111-1111-4111-8111-111111111102', name: 'Папа', role: 'FATHER', avatar_url: null, family_id: FAMILY_ID },
   ],
   children: [
     { id: CHILD_USER_ID, name: 'Никита', birth_date: '2014-04-12', age: 12, avatar_url: null, balance_summary: { amount: 85.6, currency: 'BYN' }, family_id: FAMILY_ID },
-    { id: 'mock-child-user-id-2', name: 'Даша', birth_date: '2018-06-20', age: 8, avatar_url: null, balance_summary: { amount: 42.3, currency: 'BYN' }, family_id: FAMILY_ID },
+    { id: '11111111-1111-4111-8111-111111111122', name: 'Даша', birth_date: '2018-06-20', age: 8, avatar_url: null, balance_summary: { amount: 42.3, currency: 'BYN' }, family_id: FAMILY_ID },
   ],
 };
 export const mockChild: ChildResponse = {

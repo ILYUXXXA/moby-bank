@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics, getDataSource } from './api/family';
 import type { FamilyResponse, ChildResponse, PiggybankResponse, TasksResponse, TransactionsResponse, AnalyticsResponse } from './api/family';
+import { PARENT_USER_ID, CHILD_USER_ID } from './config/userIds';
 import {
   ArrowLeft, ArrowUpRight, Award, Bell, Bike, Check, ChevronDown, ChevronRight,
   CircleHelp, CreditCard, Gamepad2, Home, MoreHorizontal, Pencil, Plus, ShieldCheck,
@@ -34,7 +35,8 @@ const IconButton = ({ children, ...props }: { children: ReactNode; onClick?: () 
   <button className="icon-btn" aria-label={props.label} data-testid={props.testId} onClick={props.onClick}>{children}</button>
 );
 function StatusBar() {
-  return <div className="status"><span>9:41</span><div className="status-icons"><Signal size={14} strokeWidth={2.7}/><Wifi size={15} strokeWidth={2.5}/><span style={{ width: 20, height: 10, border: '1.5px solid currentColor', borderRadius: 3, display: 'inline-block', position: 'relative' }}><i style={{ display:'block',position:'absolute',inset:'2px 5px 2px 2px',background:'currentColor',borderRadius:1 }}/></span></div></div>;
+  // Native status indicators are provided by the device/browser, not by the app UI.
+  return null;
 }
 function Brand({ dark = false }: { dark?: boolean }) { return <div className={`brand ${dark ? 'dark' : ''}`} data-testid="text-brand">moby<em>family</em></div>; }
 function BottomNav({ active, onSelect, mode = 'child' }: { active: string; onSelect: (key: string) => void; mode?: 'child'|'parent' }) {
@@ -50,6 +52,7 @@ function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
 
 function App() {
   const [role, setRole] = useState<Role>('picker');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [parentTab, setParentTab] = useState('family');
   const [childTab, setChildTab] = useState('home');
   const [selected, setSelected] = useState('nikita');
@@ -82,7 +85,13 @@ function App() {
   const currentChild = children.find(child => child.id === selected) ?? children[0];
   const activeGoals = goals.length;
   const showToast = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2300); };
-  const switchRole = (next: 'parent'|'child') => { setRole(next); setParentTab('family'); setChildTab('home'); };
+  const switchRole = (next: 'parent'|'child') => {
+    // Demo mode selection only: this chooses a seeded database UUID, it is not authentication.
+    setCurrentUserId(next === 'parent' ? PARENT_USER_ID : CHILD_USER_ID);
+    setRole(next);
+    setParentTab('family');
+    setChildTab('home');
+  };
   const navigateChild = (key: string) => {
     setChildTab(key);
     if (key === 'notifications') setUnread([]);
@@ -142,6 +151,21 @@ function App() {
 
   useEffect(() => { document.title = 'Moby Family'; }, []);
 
+  // In child demo mode, fetch the selected seeded child's profile using its real UUID.
+  useEffect(() => {
+    if (role !== 'child' || !currentUserId) return;
+    let cancelled = false;
+    getChild(currentUserId).then(data => {
+      if (cancelled) return;
+      setProfileName(data.child_info.name);
+      setBalance(data.balance_block.amount);
+      setSavings(data.money_categories.piggy_bank.amount);
+      setApiPayloads(current => ({ ...current, child: data }));
+      setApiSources(current => ({ ...current, child: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}`) }));
+    });
+    return () => { cancelled = true; };
+  }, [role, currentUserId]);
+
   // Load family when the parent opens the Family tab. API functions use mock data only on request failure.
   useEffect(() => {
     if (role !== 'parent' || parentTab !== 'family') return;
@@ -159,7 +183,7 @@ function App() {
       }));
       setChildren(mapped);
       setSelected(current => mapped.some(child => child.id === current) ? current : (mapped[0]?.id ?? '')); 
-      setApiSources(current => ({ ...current, family: getDataSource('/api/family/my') }));
+      setApiSources(current => ({ ...current, family: getDataSource(`/api/v1/family/my?family_id=${encodeURIComponent(data.family_id)}`) }));
     });
     return () => { cancelled = true; };
   }, [role, parentTab]);
@@ -175,7 +199,7 @@ function App() {
       getChildPiggybank(selected),
       getChildTasks(selected),
       getChildTransactions(selected, from, to),
-      getChildAnalytics(from, to),
+      getChildAnalytics(selected, from, to),
     ]).then(([child, piggybank, tasks, transactions, analytics]) => {
       if (cancelled) return;
       setApiPayloads({ child, piggybank, tasks, transactions, analytics });
@@ -183,11 +207,11 @@ function App() {
       const to = new Date().toISOString().slice(0, 10);
       setApiSources(current => ({
         ...current,
-        child: getDataSource(`/api/children/${encodeURIComponent(selected)}`),
-        piggybank: getDataSource(`/api/children/${encodeURIComponent(selected)}/piggybank`),
-        tasks: getDataSource(`/api/children/${encodeURIComponent(selected)}/tasks`),
-        transactions: getDataSource(`/api/children/${encodeURIComponent(selected)}/transactions?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`),
-        analytics: getDataSource(`/api/child/analytics?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`),
+        child: getDataSource(`/api/v1/children/${encodeURIComponent(selected)}`),
+        piggybank: getDataSource(`/api/v1/children/${encodeURIComponent(selected)}/piggybank`),
+        tasks: getDataSource(`/api/v1/children/${encodeURIComponent(selected)}/tasks`),
+        transactions: getDataSource(`/api/v1/children/${encodeURIComponent(selected)}/transactions?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`),
+        analytics: getDataSource(`/api/v1/children/${encodeURIComponent(selected)}/analytics?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`),
       }));
       setChildren(current => current.map(item => item.id === selected ? {
         ...item,
@@ -205,7 +229,7 @@ function App() {
     {id:4,title:'Новая цель',copy:'Цель «Скейтборд» ждёт тебя в копилке. Каждый шаг приближает к мечте.',time:'12 октября',icon:Sparkles},
   ], []);
 
-  const rolePicker = <div className="app-stage"><div className="role-picker"><div className="role-brand">moby<em style={{fontSize:14,fontStyle:'italic',marginLeft:4}}>family</em></div><h1>Деньги —<br/>семейное дело.</h1><p>Выбери режим демо-приложения. Можно переключаться между родителем и ребёнком в любой момент.</p><button className="role-card" data-testid="role-parent" onClick={()=>switchRole('parent')}><span className="role-icon"><UsersRound size={26}/></span><span><b>Я родитель</b><small>Семья, дети и управление деньгами</small></span><ChevronRight className="role-arrow"/></button><button className="role-card" data-testid="role-child" onClick={()=>switchRole('child')}><span className="role-icon"><UserRound size={26}/></span><span><b>Я ребёнок</b><small>Главная, копилка и профиль Никиты</small></span><ChevronRight className="role-arrow"/></button><div className="role-foot">Демо-режим · Все данные хранятся только на этом устройстве</div></div></div>;
+  const rolePicker = <div className="app-stage"><div className="role-picker"><div className="role-brand">moby<em style={{fontSize:14,fontStyle:'italic',marginLeft:4}}>family</em></div><h1>Деньги —<br/>семейное дело.</h1><p>Выбери режим демо-приложения. Можно переключаться между родителем и ребёнком в любой момент.</p><button className="role-card" data-testid="role-parent" onClick={()=>switchRole('parent')}><span className="role-icon"><UsersRound size={26}/></span><span><b>Я родитель</b><small>Семья, дети и управление деньгами</small></span><ChevronRight className="role-arrow"/></button><button className="role-card" data-testid="role-child" onClick={()=>switchRole('child')}><span className="role-icon"><UserRound size={26}/></span><span><b>Я ребёнок</b><small>Главная, копилка и профиль Никиты</small></span><ChevronRight className="role-arrow"/></button><div className="role-foot">Демо-режим · выбраны тестовые ID из базы, входа в аккаунт нет</div></div></div>;
 
   const childHeader = (withGreeting = true) => <><div className="brandbar"><Brand/><IconButton label="Уведомления" testId="open-notifications" onClick={()=>navigateChild('notifications')}><Bell size={21}/>{unread.length>0&&<i style={{width:7,height:7,borderRadius:50,background:'#2169ff',position:'absolute',transform:'translate(8px,-8px)',border:'1.5px solid white'}}/>}</IconButton></div>{withGreeting&&<div className="greeting"><h1>Привет, {profileName}!</h1><button className="avatar-small" data-testid="open-profile" onClick={()=>navigateChild('profile')}>{profileName[0]}</button></div>}</>;
 
