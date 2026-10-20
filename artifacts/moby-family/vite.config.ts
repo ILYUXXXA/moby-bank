@@ -55,6 +55,13 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
+    proxy: {
+      '/api': {
+        target: 'https://yelisei-project.onrender.com',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
     port,
     strictPort: true,
     host: '0.0.0.0',
