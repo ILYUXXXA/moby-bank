@@ -110,7 +110,6 @@ function App() {
   const navigateChild = (key: string) => {
     setChildTab(key);
     if (key === 'notifications') setUnread([]);
-    if (key === 'profile') setGenericPage('');
   };
   const navigateParent = (key: string) => { setParentTab(key); };
   const openModal = (kind: ModalKind, title: string, description?: string) => { setFormError(''); setModal({kind, title, description}); };
