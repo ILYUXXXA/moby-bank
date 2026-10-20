@@ -68,14 +68,14 @@ export const getChildTasks = (id: string) => get<TasksResponse>(`${parentChildPa
 export const getChildTransactions = (id: string, from: string, to: string) => get<TransactionsResponse>(`${parentChildPath(id)}/transactions?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`, mockTransactions);
 export const getChildAnalytics = (id: string, from: string, to: string) => get<AnalyticsResponse>(`${parentChildPath(id)}/analytics?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`, mockAnalytics);
 
-export type TaskCreateInput = { title: string; description: string; reward_amount?: number; penalty_amount?: number; currency: Currency; payout_source_card_id?: string; deadline?: string };
+export type TaskCreateInput = { title: string; description: string; reward_amount?: number | string; penalty_amount?: number | string; currency: Currency; payout_source_card_id?: string; deadline?: string };
 export const createFamily = (currency: Currency = 'BYN') => request<FamilyResponse>('/api/v1/families', { method: 'POST', headers: parentHeaders(), body: JSON.stringify({ currency }) });
 export const createChild = (familyId: string, input: { name: string; birth_date: string; avatar_url?: string | null }) =>
   request<FamilyChild>(`/api/v1/families/${encodeURIComponent(familyId)}/children`, { method: 'POST', headers: parentHeaders(), body: JSON.stringify(input) });
 export const createParent = (familyId: string, input: { name: string; birth_date: string; avatar_url?: string | null; parent_role: FamilyParent['role'] }) =>
   request<FamilyParent>(`/api/v1/families/${encodeURIComponent(familyId)}/parents`, { method: 'POST', headers: parentHeaders(), body: JSON.stringify(input) });
 export const createTask = (childId: string, input: TaskCreateInput) =>
-  request<{ task: FamilyTask }>(`${parentChildPath(childId)}/tasks`, { method: 'POST', headers: parentHeaders(), body: JSON.stringify(input) });
+  request<{ task: FamilyTask }>(`${parentChildPath(childId)}/tasks`, { method: 'POST', headers: parentHeaders(), body: JSON.stringify({ ...input, ...(input.reward_amount == null ? {} : { reward_amount: money(input.reward_amount) }), ...(input.penalty_amount == null ? {} : { penalty_amount: money(input.penalty_amount) }) }) });
 export const updateTask = (taskId: string, input: Partial<TaskCreateInput>) =>
   request<{ task: FamilyTask }>(`/api/v1/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: parentHeaders(), body: JSON.stringify(input) });
 export const approveTask = (taskId: string, idempotencyKey?: string) =>
