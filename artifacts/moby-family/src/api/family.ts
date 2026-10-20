@@ -30,6 +30,7 @@ export type ChildResponse = {
   pending_tasks: unknown[];
   transactions_history: { period_start: string; period_end: string; items: unknown[] };
 };
+export type ChildProfileResponse = { name: string; birth_date: string; age: number; avatar_url: string | null };
 export type ChildAppDashboardResponse = {
   child_info: { name: string; avatar_url: string | null };
   balance_block: { active_balance: number | string; piggybank_balance: number | string; currency: Currency; card_mask: string | null } | null;
@@ -81,6 +82,7 @@ async function get<T>(path: string, fallback: T): Promise<T> {
     return fallback;
   }
 }
+export const getChildProfile = (id: string) => get<ChildProfileResponse>(`/api/v1/child/${encodeURIComponent(id)}/profile`, { name: mockChild.child_info.name, birth_date: mockChild.child_info.birth_date, age: mockChild.child_info.age, avatar_url: mockChild.child_info.avatar_url });
 export const getChildAppDashboard = (id: string) => get<ChildAppDashboardResponse>(`/api/v1/child/${encodeURIComponent(id)}/dashboard`, {
   child_info: { name: mockChild.child_info.name, avatar_url: mockChild.child_info.avatar_url },
   balance_block: { active_balance: Number(mockChild.balance_block?.amount ?? 0) - Number(mockPiggybank.total_saved_amount), piggybank_balance: mockChild.money_categories.piggy_bank.amount, currency: mockChild.balance_block?.currency ?? 'BYN', card_mask: mockChild.balance_block?.card_mask ?? null },
