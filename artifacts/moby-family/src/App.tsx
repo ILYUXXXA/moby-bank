@@ -198,9 +198,9 @@ function App() {
       try {
         const payoutCardId = String(data.get('payout_source_card_id') || import.meta.env.VITE_PARENT_CARD_ID || PARENT_CARD_ID).trim();
         if ((reward > 0 || penalty > 0) && !payoutCardId) { setFormError('Для денежного задания укажи ID активной карты родителя или задай VITE_PARENT_CARD_ID.'); return; }
-        const result = await createTask(currentChild.id, { title, description, reward_amount: reward.toFixed(2), penalty_amount: penalty.toFixed(2), currency: apiPayloads.child?.balance_block?.currency ?? 'BYN', ...(payoutCardId ? { payout_source_card_id: payoutCardId } : {}), ...(deadlineValue ? { deadline: new Date(deadlineValue).toISOString() } : {}) });
-        const createdTask = (result as any).task ?? result;
-        setApiPayloads(current => ({ ...current, tasks: { tasks: [createdTask, ...(current.tasks?.tasks ?? []).filter(task => task.task_id !== createdTask.task_id)] } }));
+        await createTask(currentChild.id, { title, description, reward_amount: reward.toFixed(2), penalty_amount: penalty.toFixed(2), currency: apiPayloads.child?.balance_block?.currency ?? 'BYN', ...(payoutCardId ? { payout_source_card_id: payoutCardId } : {}), ...(deadlineValue ? { deadline: new Date(deadlineValue).toISOString() } : {}) });
+        const refreshedTasks = await getChildTasks(currentChild.id);
+        setApiPayloads(current => ({ ...current, tasks: refreshedTasks }));
         showToast('Задание создано через API');
       } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось создать задание'); return; }
     } else if (modal?.kind === 'member') {
@@ -215,8 +215,9 @@ function App() {
         if (memberRole === 'PARENT') {
           const parentRole = String(data.get('parent_role') || 'GUARDIAN') as 'MOTHER' | 'FATHER' | 'GUARDIAN';
           const created = await createParent(familyResponse.family_id, { name, birth_date: birthDate, parent_role: parentRole });
-          const parent = (created as any).parent ?? created;
-          if (!parent?.id) throw new Error('API создал запись родителя, но не вернул id');
+          const rawParent = (created as any).parent ?? created;
+          if (!rawParent?.id) throw new Error('API создал запись родителя, но не вернул id');
+          const parent = { ...rawParent, role: rawParent.role ?? rawParent.parent_role ?? parentRole } as FamilyResponse['parents'][number];
           setFamilyParents(items => [...items.filter(item => item.id !== parent.id), parent]);
           setFamilyResponse(current => current ? { ...current, parents: [...current.parents.filter(item => item.id !== parent.id), parent] } : current);
           showToast(`${parent.name ?? name} добавлен(а) в семью`);
