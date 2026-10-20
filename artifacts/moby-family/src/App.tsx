@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
-import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics } from './api/family';
+import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics, getDataSource } from './api/family';
+import type { FamilyResponse, ChildResponse, PiggybankResponse, TasksResponse, TransactionsResponse, AnalyticsResponse } from './api/family';
 import {
   ArrowLeft, ArrowUpRight, Award, Bell, Bike, Check, ChevronDown, ChevronRight,
   CircleHelp, CreditCard, Gamepad2, Home, MoreHorizontal, Pencil, Plus, ShieldCheck,
@@ -54,6 +55,16 @@ function App() {
   const [selected, setSelected] = useState('nikita');
   const [confirmed, setConfirmed] = useState(false);
   const [children, setChildren] = useState<ChildRecord[]>(initialChildren);
+  const [familyResponse, setFamilyResponse] = useState<FamilyResponse | null>(null);
+  const [familyParents, setFamilyParents] = useState<FamilyResponse['parents']>([]);
+  const [apiPayloads, setApiPayloads] = useState<{
+    child: ChildResponse | null;
+    piggybank: PiggybankResponse | null;
+    tasks: TasksResponse | null;
+    transactions: TransactionsResponse | null;
+    analytics: AnalyticsResponse | null;
+  }>({ child: null, piggybank: null, tasks: null, transactions: null, analytics: null });
+  const [apiSources, setApiSources] = useState<Record<string, 'api' | 'mock'>>({});
   const [goals, setGoals] = useState<Goal[]>(initialGoals);
   const [balance, setBalance] = useState(15.4);
   const [savings, setSavings] = useState(100);
@@ -136,8 +147,10 @@ function App() {
     if (role !== 'parent' || parentTab !== 'family') return;
     let cancelled = false;
     getFamily().then(data => {
-      if (cancelled || !data.children?.length) return;
-      const mapped = data.children.map(child => ({
+      if (cancelled) return;
+      setFamilyResponse(data);
+      setFamilyParents(data.parents ?? []);
+      const mapped = (data.children ?? []).map(child => ({
         id: child.id,
         name: child.name,
         age: child.age,
@@ -145,7 +158,8 @@ function App() {
         limit: 20,
       }));
       setChildren(mapped);
-      setSelected(current => mapped.some(child => child.id === current) ? current : mapped[0].id);
+      setSelected(current => mapped.some(child => child.id === current) ? current : (mapped[0]?.id ?? '')); 
+      setApiSources(current => ({ ...current, family: getDataSource('/api/family/my') }));
     });
     return () => { cancelled = true; };
   }, [role, parentTab]);
@@ -164,14 +178,23 @@ function App() {
       getChildAnalytics(from, to),
     ]).then(([child, piggybank, tasks, transactions, analytics]) => {
       if (cancelled) return;
+      setApiPayloads({ child, piggybank, tasks, transactions, analytics });
+      const from = '2026-10-01';
+      const to = new Date().toISOString().slice(0, 10);
+      setApiSources(current => ({
+        ...current,
+        child: getDataSource(`/api/children/${encodeURIComponent(selected)}`),
+        piggybank: getDataSource(`/api/children/${encodeURIComponent(selected)}/piggybank`),
+        tasks: getDataSource(`/api/children/${encodeURIComponent(selected)}/tasks`),
+        transactions: getDataSource(`/api/children/${encodeURIComponent(selected)}/transactions?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`),
+        analytics: getDataSource(`/api/child/analytics?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`),
+      }));
       setChildren(current => current.map(item => item.id === selected ? {
         ...item,
         name: child.child_info.name,
         age: child.child_info.age,
         balance: child.balance_block.amount,
       } : item));
-      // Keep responses available for the screen and debugging without changing the current layout.
-      console.info('Child profile data loaded', { piggybank, tasks, transactions, analytics });
     });
     return () => { cancelled = true; };
   }, [role, parentTab, selected]);
@@ -200,14 +223,31 @@ function App() {
 
   const notificationsPage = <><div className="phone-content"><StatusBar/><div className="brandbar"><button className="back-role" aria-label="Назад" data-testid="back-from-notifications" onClick={()=>navigateChild('home')}><ArrowLeft size={19}/></button><Brand/><span style={{width:34}}/></div><div className="page-head" style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><h1 style={{fontSize:26}}>Уведомления</h1>{unread.length>0&&<button className="text-action" data-testid="mark-all-read" onClick={()=>setUnread([])}>Прочитать всё</button>}</div><div className="notifications-list"><h3 style={{fontSize:13,color:'#8a99ae',margin:'7px 2px'}}>Недавние</h3>{sortedNotifications.map(item=><div className={`notification-card ${unread.includes(item.id)?'unread':''}`} key={item.id} data-testid={`notification-${item.id}`} role="button" tabIndex={0} onClick={()=>readNotification(item.id)} onKeyDown={event=>{if(event.key==='Enter')readNotification(item.id)}}><span className="notification-icon"><item.icon size={19}/></span><span className="notification-copy"><b>{item.title}</b><p>{item.copy}</p><small>{item.time}</small></span>{unread.includes(item.id)&&<i className="notif-dot"/>}</div>)}</div></div><BottomNav active="profile" onSelect={navigateChild}/></>;
 
-  const parentFamily = <><div className="phone-content parent-scroll"><StatusBar/><div className="brandbar"><Brand/><IconButton label="Уведомления" testId="parent-notifications" onClick={()=>showToast('Новых уведомлений нет')}><Bell size={21}/></IconButton></div><div className="parent-head"><h1>Моя семья</h1><IconButton label="Добавить члена семьи" testId="add-family-member" onClick={()=>openModal('member','Добавить члена семьи')}><Plus size={22}/></IconButton></div><div className="tree-zone"><div className="tree-line horizontal"/><div className="tree-line vertical-main"/><div className="tree-line horizontal-child"/><div className="tree-line child-left"/><div className="tree-line child-right"/><div className="parent-person mom"><span className="parent-ico"><UserRound size={28} strokeWidth={1.5}/></span><span>Мама</span></div><div className="parent-person dad"><span className="parent-ico"><UserRound size={28} strokeWidth={1.5}/></span><span>Папа</span></div>{children.map((child,index)=><button key={child.id} className={`child-choice ${selected===child.id?'selected':''} ${index%2===0?'left':'right'}`} data-testid={`select-child-${child.id}`} onClick={()=>{setSelected(child.id);setConfirmed(false);}}><span className="child-avatar"><UserRound size={39} strokeWidth={1.4}/>{selected===child.id&&<i style={{position:'absolute',right:-2,bottom:-1,width:20,height:20,borderRadius:50,background:'#416bff',border:'2px solid white',color:'white',display:'grid',placeItems:'center'}}><Check size={12}/></i>}</span><strong>{child.name} <ChevronRight size={14} style={{verticalAlign:'middle'}}/></strong><small>{child.age} лет</small></button>)}</div><div className="selection-tip"><MousePointerIcon/>Нажмите на ребёнка, чтобы открыть профиль</div><div className="parent-confirm"><button className="primary-btn" data-testid="confirm-family-selection" onClick={()=>{setConfirmed(true);setParentTab('details');showToast(`Открыт профиль: ${currentChild.name}`)}}>{confirmed?'Выбор подтверждён':'Подтвердить'}</button></div></div><BottomNav active="family" mode="parent" onSelect={navigateParent}/></>;
+  const parentFamily = <><div className="phone-content parent-scroll"><StatusBar/><div className="brandbar"><Brand/><IconButton label="Уведомления" testId="parent-notifications" onClick={()=>showToast('Новых уведомлений нет')}><Bell size={21}/></IconButton></div><div className="parent-head"><h1>Моя семья</h1><IconButton label="Добавить члена семьи" testId="add-family-member" onClick={()=>openModal('member','Добавить члена семьи')}><Plus size={22}/></IconButton></div><div className="tree-zone"><div className="tree-line horizontal"/><div className="tree-line vertical-main"/><div className="tree-line horizontal-child"/><div className="tree-line child-left"/><div className="tree-line child-right"/><div className="parent-person mom"><span className="parent-ico"><UserRound size={28} strokeWidth={1.5}/></span><span>{familyParents.find(parent => parent.role === 'MOTHER')?.name ?? 'Мама'}</span></div><div className="parent-person dad"><span className="parent-ico"><UserRound size={28} strokeWidth={1.5}/></span><span>{familyParents.find(parent => parent.role === 'FATHER')?.name ?? familyParents.find(parent => parent.role === 'GUARDIAN')?.name ?? 'Папа'}</span></div>{children.length ? children.map((child,index)=><button key={child.id} className={`child-choice ${selected===child.id?'selected':''} ${index%2===0?'left':'right'}`} data-testid={`select-child-${child.id}`} onClick={()=>{setSelected(child.id);setConfirmed(false);}}><span className="child-avatar"><UserRound size={39} strokeWidth={1.4}/>{selected===child.id&&<i style={{position:'absolute',right:-2,bottom:-1,width:20,height:20,borderRadius:50,background:'#416bff',border:'2px solid white',color:'white',display:'grid',placeItems:'center'}}><Check size={12}/></i>}</span><strong>{child.name} <ChevronRight size={14} style={{verticalAlign:'middle'}}/></strong><small>{child.age} лет</small></button>):<div className="family-empty">В семье пока нет детей</div>}</div><div className="selection-tip"><MousePointerIcon/>Нажмите на ребёнка, чтобы открыть профиль</div><div className="parent-confirm"><button className="primary-btn" data-testid="confirm-family-selection" onClick={()=>{setConfirmed(true);setParentTab('details');showToast(`Открыт профиль: ${currentChild.name}`)}}>{confirmed?'Выбор подтверждён':'Подтвердить'}</button></div></div><BottomNav active="family" mode="parent" onSelect={navigateParent}/></>;
 
   const parentDetails = <><div className="phone-content parent-scroll"><div className="detail-top"><StatusBar/><div className="brandbar" style={{height:44}}><button className="back-role" aria-label="Назад к семье" data-testid="back-to-family" onClick={()=>setParentTab('family')}><ArrowLeft size={18}/></button><span style={{fontSize:14,fontWeight:600}}>Мой ребёнок</span><button className="back-role" aria-label="Настройки" data-testid="child-settings" onClick={()=>openModal('generic','Настройки профиля','Управление параметрами карты и ребёнка')}><SlidersHorizontal size={17}/></button></div><div className="child-detail-head"><div className="detail-avatar"><UserRound size={29}/></div><div><div className="detail-name">{currentChild?.name}</div><div className="detail-sub">{currentChild?.age} лет · В вашей семье</div></div></div><div className="detail-balance"><div className="detail-label"><span>Баланс карты</span><button className="text-action" data-testid="parent-history" onClick={()=>showToast('История операций за октябрь')}><History size={12} style={{verticalAlign:'middle'}}/> История</button></div><div className="detail-amount">{currentChild?.balance.toFixed(2).replace('.', ',')} <span style={{fontSize:12,fontWeight:500}}>BYN</span></div><div className="detail-actions"><button className="detail-action" data-testid="parent-topup" onClick={()=>openModal('topup',`Пополнить карту ${currentChild?.name}`)}><Plus size={14}/>Пополнить</button><button className="detail-action light" data-testid="parent-statement" onClick={()=>showToast('Выписка подготовлена')}><FileText size={14}/>Выписка</button></div></div></div>
   <section className="detail-section"><h3>Деньги по категориям</h3><div className="detail-box">{[{label:'Транспорт',value:'25,60 BYN',icon:BusFront},{label:'Покупки',value:'40,00 BYN',icon:Wallet}].map((item,index)=><div className="money-row" key={item.label}><item.icon size={15} color="#416bff"/><span>{item.label}</span><span className="amount">{item.value}</span><button className="round-plus" data-testid={`add-money-${index}`} onClick={()=>openModal('topup',`Пополнить: ${item.label}`)}><Plus size={16}/></button></div>)}</div></section>
   <section className="detail-section"><div className="section-title" style={{marginBottom:8}}><h3 style={{margin:0}}>Цель {currentChild?.name}</h3><button className="text-action" data-testid="parent-all-goals" onClick={()=>showToast('Показаны все цели')}>Все цели <ChevronRight size={13}/></button></div><div className="parent-goal"><div style={{display:'flex',gap:8,alignItems:'center'}}><span className="setting-icon"><Bike size={18}/></span><div style={{flex:1}}><b style={{fontSize:12}}>Новый велосипед</b><div style={{fontSize:9,color:'#929fb0'}}>120,00 из 250,00 BYN</div></div><b style={{fontSize:11,color:'#416bff'}}>48%</b></div><div className="progress"><i style={{width:'48%'}}/></div><div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:'#8595aa'}}><span>Осталось 130,00 BYN</span><button className="text-action" data-testid="parent-add-goal-money" onClick={()=>openModal('topup','Пополнить цель')}>Пополнить +</button></div></div></section>
   <section className="detail-section"><h3>Карманные деньги</h3><div className="pocket-box"><div className="switch-line"><span><b style={{display:'block',fontSize:11}}>Переводить автоматически</b><small style={{color:'#8a99ad',fontSize:9}}>На карту {currentChild?.name}</small></span><button className={`switch ${autoTransfer?'on':''}`} aria-label="Автоматический перевод" data-testid="toggle-auto-transfer" onClick={()=>setAutoTransfer(!autoTransfer)}><i/></button></div><div className="switch-line"><span><small style={{fontSize:9,color:'#9aa6b7'}}>Сумма перевода</small><b style={{display:'block',fontSize:13}}>{pocket} BYN</b></span><button className="text-action" data-testid="edit-pocket-amount" onClick={()=>openModal('generic','Изменить карманные деньги','Укажи сумму регулярного перевода')}><Pencil size={13}/></button></div><div style={{fontSize:10,fontWeight:700,margin:'9px 0 6px'}}>Как часто переводить</div><div style={{display:'flex',gap:5}}>{['Ежедневно','Еженедельно','Ежемесячно'].map(item=><button key={item} data-testid={`frequency-${item}`} onClick={()=>setFrequency(item)} style={{fontSize:8,padding:'7px 8px',borderRadius:7,border:0,background:frequency===item?'#416bff':'#f3f5f9',color:frequency===item?'white':'#8d99aa',flex:1}}>{item}</button>)}</div><div style={{fontSize:9,color:'#8b98ab',marginTop:9}}>По понедельникам, в {frequency.toLowerCase()}</div><button className="text-action" data-testid="edit-transfer-schedule" onClick={()=>showToast('Расписание перевода сохранено')}>Изменить расписание</button><div className="switch-line"><small style={{fontSize:9,color:'#7e8fa6'}}>Следующий перевод: 20,00 BYN</small><button className="text-action" data-testid="change-transfer-date" onClick={()=>showToast('Дата перевода обновлена')}>Изменить</button></div></div></section>
   <section className="detail-section"><div className="section-title"><h3>Задания от родителей</h3><button className="primary-btn" style={{width:'auto',minHeight:34,fontSize:10,padding:'0 12px'}} data-testid="add-parent-task" onClick={()=>openModal('task','Добавить задание')}><Plus size={13}/>Добавить задание</button></div><div className="parent-goal"><div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'#8695aa'}}><b style={{color:'#304b70'}}>Хороший порядок на столе</b><span>+10 BYN</span></div><p style={{fontSize:9,color:'#8594a8',margin:'7px 0'}}>Убери вещи и игрушки на место, протри стол и наведи порядок.</p><div className="detail-box" style={{fontSize:9,marginBottom:7}}>Нужно навести порядок к 19:00</div><button className="detail-action" data-testid="approve-task" onClick={()=>showToast('Задание подтверждено, награда отправлена')}>Одобрить и перевести 10,00 BYN</button><button className="text-action" data-testid="edit-task" onClick={()=>openModal('task','Редактировать задание')}>Изменить задание</button></div></section>
-  <section className="detail-section"><h3>История операций</h3><div className="detail-box"><button className="text-action" data-testid="transaction-date-filter">12–19 октября 2026 <ChevronDown size={13}/></button>{startTransactions.map((item,index)=><div className="money-row" key={item.title}><item.icon size={15} color="#416bff"/><span style={{flex:1}}>{item.title}</span><b style={{fontSize:10}}>{index===0?'+20,00':'-4,50'} BYN</b></div>)}<button className="text-action" style={{width:'100%'}} data-testid="download-statement" onClick={()=>showToast('Выписка за период скачана')}><FileText size={13}/> Скачать выписку за период</button></div></section></div><BottomNav active="family" mode="parent" onSelect={navigateParent}/></>;
+  <section className="detail-section"><h3>История операций</h3><div className="detail-box"><button className="text-action" data-testid="transaction-date-filter">12–19 октября 2026 <ChevronDown size={13}/></button>{startTransactions.map((item,index)=><div className="money-row" key={item.title}><item.icon size={15} color="#416bff"/><span style={{flex:1}}>{item.title}</span><b style={{fontSize:10}}>{index===0?'+20,00':'-4,50'} BYN</b></div>)}<button className="text-action" style={{width:'100%'}} data-testid="download-statement" onClick={()=>showToast('Выписка за период скачана')}><FileText size={13}/> Скачать выписку за период</button></div></section>
+  <section className="detail-section api-response-section">
+    <h3>Данные профиля из API</h3>
+    <p className="api-response-note">Ответы показываются целиком: при успешном запросе — данные сервера, при ошибке — mock-данные.</p>
+    {([
+      ['Семья и участники', familyResponse, apiSources.family],
+      ['Профиль ребёнка', apiPayloads.child, apiSources.child],
+      ['Копилка и цели', apiPayloads.piggybank, apiSources.piggybank],
+      ['Задания', apiPayloads.tasks, apiSources.tasks],
+      ['Транзакции', apiPayloads.transactions, apiSources.transactions],
+      ['Аналитика', apiPayloads.analytics, apiSources.analytics],
+    ] as [string, unknown, 'api' | 'mock' | undefined][]).map(([label, payload, source]) => (
+      <details className="api-response-item" key={label}>
+        <summary><span>{label}</span><span className={`api-source ${source === 'api' ? 'live' : 'mock'}`}>{source === 'api' ? 'API' : 'Mock'}</span></summary>
+        <pre>{JSON.stringify(payload, null, 2) ?? 'Ожидание данных'}</pre>
+      </details>
+    ))}
+  </section></div><BottomNav active="family" mode="parent" onSelect={navigateParent}/></>;
 
   const parentHome = <div className="phone-content"><StatusBar/><div className="brandbar"><Brand/><IconButton label="Уведомления" testId="home-notifications" onClick={()=>showToast('Новых уведомлений нет')}><Bell size={21}/></IconButton></div><div className="greeting"><h1>Добро пожаловать!</h1><span className="avatar-small">М</span></div><section className="section"><h2 style={{fontSize:17,margin:'0 0 12px'}}>Общий баланс</h2><div className="bank-card" style={{height:190}}><div className="card-brand">moby family <Wifi size={17}/></div><div className="card-label">Средства семьи</div><div className="card-amount">2 450,00 BYN</div><div className="card-footer">•••• 3910 <span>VISA</span></div></div><div className="settings-list" style={{marginTop:14}}><SettingButton icon={UsersRound} title="Семейные профили" sub={`${children.length} участника`} onClick={()=>setParentTab('family')} testId="home-family-link"/><SettingButton icon={CreditCard} title="Детские карты" sub="Баланс и управление" onClick={()=>setParentTab('products')} testId="home-cards-link"/></div><div className="form-row" style={{marginTop:14}}><button className="primary-btn" data-testid="home-transfer" onClick={()=>openModal('topup','Перевести ребёнку')}>Перевести деньги</button><button className="secondary-btn" data-testid="home-add-card" onClick={()=>openModal('generic','Оформить карту','Заполни данные, чтобы оформить семейную карту')}>Новая карта</button></div></section></div>;
   const parentChat = <div className="phone-content"><StatusBar/><div className="brandbar"><Brand/><span className="active-pill">Семейный чат</span></div><div className="page-head"><h1>Чат</h1></div><section className="section"><div className="detail-box" style={{minHeight:330,display:'flex',flexDirection:'column',justifyContent:'flex-end',gap:10}}>{parentMessages.map((message,index)=><div key={index} className="notification-card" style={{maxWidth:'88%',margin:0,background:index===0?'#eaf1ff':'#f8faff'}}><span className="notification-icon"><UserRound size={18}/></span><span className="notification-copy"><b>{index===0?'Мама':'Вы'}</b><p>{message}</p><small>Сегодня</small></span></div>)}</div><form className="form-row" style={{marginTop:12}} onSubmit={event=>{event.preventDefault();if(messageDraft.trim()){setParentMessages(messages=>[...messages,messageDraft.trim()]);setMessageDraft('');showToast('Сообщение отправлено');}}}><input className="form-control" value={messageDraft} onChange={event=>setMessageDraft(event.target.value)} placeholder="Напишите сообщение" data-testid="input-chat-message"/><button type="submit" className="icon-btn" data-testid="send-chat-message" aria-label="Отправить"><ArrowUpRight size={19}/></button></form></section></div>;
