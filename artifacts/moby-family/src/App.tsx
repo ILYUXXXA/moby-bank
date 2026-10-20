@@ -316,7 +316,7 @@ function App() {
       setChildCards(Object.fromEntries(entries));
       setApiSources(current => ({
         ...current,
-        ...Object.fromEntries(entries.map(([id]) => [`card:${id}`, getDataSource(`/api/v1/parent/children/${encodeURIComponent(id)}`)])),
+        ...Object.fromEntries(entries.map(([id]) => [`card:${id}`, getDataSource(`/api/v1/parent/children/${encodeURIComponent(id)}`)] as const)),
       }));
     });
     return () => { cancelled = true; };
