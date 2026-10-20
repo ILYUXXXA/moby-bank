@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics, getDataSource, createChild, createParent, createTask, approveTask, rejectTask } from './api/family';
+import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics, getDataSource, createChild, createParent, createTask, approveTask, rejectTask, createGoal, topUpCard, contributeToGoal } from './api/family';
 import type { FamilyResponse, ChildResponse, PiggybankResponse, TasksResponse, TransactionsResponse, AnalyticsResponse } from './api/family';
 import { PARENT_USER_ID, CHILD_USER_ID } from './config/userIds';
 import {
@@ -123,19 +123,57 @@ function App() {
       const title = String(data.get('name') || '').trim();
       const target = Number(data.get('target'));
       if (!title || !target || target < 1) { setFormError('Укажи название и сумму цели.'); return; }
-      setGoals(items => [...items, { id: Date.now(), title, target, saved: 0, glyph: 'gift' }]);
-      showToast('Цель добавлена в копилку');
+      if (role === 'parent') {
+        if (!currentChild?.id) { setFormError('Сначала выбери ребёнка.'); return; }
+        try {
+          const created = await createGoal(currentChild.id, { title, target_amount: target.toFixed(2), currency: apiPayloads.child?.balance_block?.currency ?? 'BYN' }) as any;
+          const goal = created?.goal ?? created;
+          const goalId = goal?.goal_id ?? goal?.id;
+          if (!goalId) throw new Error('API не вернул ID созданной цели');
+          const mappedGoal = { id: goalId, title: goal.title ?? title, saved: toAmount(goal.current_amount), target: toAmount(goal.target_amount ?? target), glyph: 'gift' as const };
+          setGoals(items => [...items, mappedGoal]);
+          const refreshed = await getChildPiggybank(currentChild.id);
+          setApiPayloads(current => ({ ...current, piggybank: refreshed }));
+          showToast('Цель создана через API');
+        } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось создать цель'); return; }
+      } else {
+        setGoals(items => [...items, { id: Date.now(), title, target, saved: 0, glyph: 'gift' }]);
+        showToast('Цель добавлена в демо-копилку');
+      }
     } else if (modal?.kind === 'topup') {
       const amount = Number(data.get('amount'));
       if (!amount || amount <= 0) { setFormError('Введи сумму больше нуля.'); return; }
-      if (modal.title.startsWith('Пополнить: ')) {
+      if (role === 'parent') {
+        const childCardId = apiPayloads.child?.balance_block?.card_id;
+        const goalTitle = modal.title.startsWith('Пополнить: ') ? modal.title.replace('Пополнить: ', '') : '';
+        const apiGoal = apiPayloads.piggybank?.goals?.find(goal => goal.title === goalTitle);
+        if (goalTitle && apiGoal && childCardId) {
+          try {
+            await contributeToGoal(apiGoal.goal_id, { amount: amount.toFixed(2), card_id: childCardId, title: `Пополнение цели: ${goalTitle}` });
+            const refreshed = await getChildPiggybank(selected);
+            setApiPayloads(current => ({ ...current, piggybank: refreshed }));
+            setGoals(refreshed.goals.map(goal => ({ id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount), target: Math.max(1, toAmount(goal.target_amount)), glyph: 'gift' as const })));
+            showToast('Цель пополнена через API');
+          } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось пополнить цель'); return; }
+        } else if (modal.title.includes('карту') && childCardId) {
+          try {
+            await topUpCard(childCardId, { amount: amount.toFixed(2), currency: apiPayloads.child?.balance_block?.currency ?? 'BYN', title: 'Пополнение карты' });
+            const refreshed = await getChild(selected);
+            setApiPayloads(current => ({ ...current, child: refreshed }));
+            showToast('Карта пополнена через API');
+          } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось пополнить карту'); return; }
+        } else {
+          setFormError('Для этой операции API требует ID цели или карты. Обнови данные ребёнка и попробуй снова.');
+          return;
+        }
+      } else if (modal.title.startsWith('Пополнить: ')) {
         const goalTitle = modal.title.replace('Пополнить: ', '');
         setGoals(items => items.map(goal => goal.title === goalTitle ? { ...goal, saved: Math.min(goal.target, goal.saved + amount) } : goal));
-      } else if (modal.title.includes('карту')) {
-        setChildren(items => items.map(child => child.id === selected ? { ...child, balance: child.balance + amount } : child));
-      } else if (modal.title.toLowerCase().includes('перевести')) setBalance(value => value + amount);
-      else setSavings(value => value + amount);
-      showToast(`Готово: ${amount.toFixed(2).replace('.', ',')} BYN`);
+        showToast('Демо: цель пополнена локально');
+      } else {
+        setFormError('Эта операция пока не подключена в режиме ребёнка.');
+        return;
+      }
     } else if (modal?.kind === 'task') {
       const title = String(data.get('name') || '').trim();
       const description = String(data.get('description') || '').trim();
@@ -169,7 +207,7 @@ function App() {
           showToast(`${parent.name ?? name} добавлен(а) в семью`);
         } else {
           const created = await createChild(familyResponse.family_id, { name, birth_date: birthDate });
-          const child = (created as any).child ?? created;
+          const child = (created as any).child_info ?? (created as any).child ?? created;
           if (!child?.id) throw new Error('API создал запись, но не вернул id ребёнка');
           const mapped = { id: child.id, name: child.name ?? name, age: Number(child.age ?? age), balance: toAmount(child.balance_summary?.amount), limit: 15 };
           setChildren(items => [...items, mapped]);
@@ -345,7 +383,7 @@ function App() {
   const donutGradient = analyticsCategories.length
     ? 'conic-gradient(' + analyticsCategories.map((category,index) => { const start=categoryCursor; categoryCursor += Math.max(0,Math.min(100,toAmount(category.percentage))); return `${analyticsColors[index % analyticsColors.length]} ${start}% ${categoryCursor}%`; }).join(', ') + ')'
     : 'conic-gradient(#e6eaff 0% 100%)';
-  const parentGoalsPage = <><div className="phone-content parent-scroll"><div className="brandbar"><button className="back-role" data-testid="back-from-goals" onClick={()=>setParentTab('details')}><ArrowLeft size={18}/></button><span style={{color:'#416bff',fontSize:15}}>{currentChild?.name ?? 'Ребёнок'}</span><span style={{width:34}}/></div><div className="page-head"><h1>Все цели</h1><p style={{color:'#8491a7',margin:'8px 0 0'}}>На что копит {currentChild?.name ?? 'ребёнок'}</p></div><div style={{background:'#eef0ff',borderRadius:22,padding:24,margin:'14px 20px 24px'}}><div style={{fontSize:15}}>Копилка</div><div style={{fontSize:29,fontWeight:800,margin:'6px 0'}}>{toAmount(apiPayloads.piggybank?.total_saved_amount ?? apiPayloads.child?.money_categories?.piggy_bank?.amount).toFixed(2).replace('.', ',')} {apiPayloads.piggybank?.currency ?? 'BYN'}</div><div style={{fontSize:13,color:'#8491a7'}}>В копилке {currentChild?.name ?? 'ребёнка'}</div></div><section className="savings-list"><div className="section-title"><h2>Цели {currentChild?.name}</h2><span className="active-pill">{goals.length} целей</span></div>{goals.map(goal=>{const pct=Math.min(100,Math.round(goal.saved/Math.max(1,goal.target)*100));const left=Math.max(0,goal.target-goal.saved);const GoalIcon=goal.glyph==='headphones'?Headphones:goal.glyph==='bike'?Bike:goal.glyph==='game'?Gamepad2:goal.glyph==='book'?FileText:Sparkles;return <div className="saving-goal" key={goal.id} data-testid={`all-goal-${goal.id}`} style={{padding:16,margin:'12px 0',border:0,borderRadius:20}}><div style={{display:'flex',alignItems:'center',gap:12}}><span className="setting-icon" style={{width:48,height:48}}><GoalIcon size={23}/></span><div style={{flex:1}}><div className="saving-goal-title" style={{fontSize:15}}>{goal.title}</div><div style={{fontSize:12,color:'#7f8da5',marginTop:5}}>{goal.saved.toFixed(2).replace('.', ',')} из {goal.target.toFixed(2).replace('.', ',')} BYN</div></div><b style={{color:'#5363ff'}}>{pct}%</b></div><div className="progress" style={{height:5,margin:'14px 0'}}><i style={{width:`${pct}%`}}/></div><div style={{fontSize:12,color:'#8491a7',marginBottom:12}}>Осталось <b style={{color:'#26354b'}}>{left.toFixed(2).replace('.', ',')} BYN</b></div><button className="primary-btn" data-testid={`topup-goal-${goal.id}`} onClick={()=>openModal('topup',`Пополнить: ${goal.title}`)}>Пополнить</button></div>})}{!goals.length&&<div className="empty-note">Целей пока нет или сервер не вернул данные.</div>}</section></div><div className="home-indicator"><i/></div></>;
+  const parentGoalsPage = <><div className="phone-content parent-scroll"><div className="brandbar"><button className="back-role" data-testid="back-from-goals" onClick={()=>setParentTab('details')}><ArrowLeft size={18}/></button><span style={{color:'#416bff',fontSize:15}}>{currentChild?.name ?? 'Ребёнок'}</span><span style={{width:34}}/></div><div className="page-head"><h1>Все цели</h1><p style={{color:'#8491a7',margin:'8px 0 0'}}>На что копит {currentChild?.name ?? 'ребёнок'}</p></div><div style={{background:'#eef0ff',borderRadius:22,padding:24,margin:'14px 20px 24px'}}><div style={{fontSize:15}}>Копилка</div><div style={{fontSize:29,fontWeight:800,margin:'6px 0'}}>{toAmount(apiPayloads.piggybank?.total_saved_amount ?? apiPayloads.child?.money_categories?.piggy_bank?.amount).toFixed(2).replace('.', ',')} {apiPayloads.piggybank?.currency ?? 'BYN'}</div><div style={{fontSize:13,color:'#8491a7'}}>В копилке {currentChild?.name ?? 'ребёнка'}</div></div><section className="savings-list"><div className="section-title"><h2>Цели {currentChild?.name}</h2><span className="active-pill">{goals.length} целей</span></div><button className="primary-btn" style={{marginBottom:12}} data-testid="parent-create-goal" onClick={()=>openModal('goal','Создать цель')}>Создать цель</button>{goals.map(goal=>{const pct=Math.min(100,Math.round(goal.saved/Math.max(1,goal.target)*100));const left=Math.max(0,goal.target-goal.saved);const GoalIcon=goal.glyph==='headphones'?Headphones:goal.glyph==='bike'?Bike:goal.glyph==='game'?Gamepad2:goal.glyph==='book'?FileText:Sparkles;return <div className="saving-goal" key={goal.id} data-testid={`all-goal-${goal.id}`} style={{padding:16,margin:'12px 0',border:0,borderRadius:20}}><div style={{display:'flex',alignItems:'center',gap:12}}><span className="setting-icon" style={{width:48,height:48}}><GoalIcon size={23}/></span><div style={{flex:1}}><div className="saving-goal-title" style={{fontSize:15}}>{goal.title}</div><div style={{fontSize:12,color:'#7f8da5',marginTop:5}}>{goal.saved.toFixed(2).replace('.', ',')} из {goal.target.toFixed(2).replace('.', ',')} BYN</div></div><b style={{color:'#5363ff'}}>{pct}%</b></div><div className="progress" style={{height:5,margin:'14px 0'}}><i style={{width:`${pct}%`}}/></div><div style={{fontSize:12,color:'#8491a7',marginBottom:12}}>Осталось <b style={{color:'#26354b'}}>{left.toFixed(2).replace('.', ',')} BYN</b></div><button className="primary-btn" data-testid={`topup-goal-${goal.id}`} onClick={()=>openModal('topup',`Пополнить: ${goal.title}`)}>Пополнить</button></div>})}{!goals.length&&<div className="empty-note">Целей пока нет или сервер не вернул данные.</div>}</section></div><div className="home-indicator"><i/></div></>;
   const dailySpending = (apiPayloads.transactions?.items ?? []).filter(item => item.direction === 'OUTCOME').reduce((acc, item) => { const day = item.timestamp.slice(0, 10); acc[day] = (acc[day] ?? 0) + toAmount(item.amount); return acc; }, {} as Record<string, number>);
   const dailySpendingEntries = Object.entries(dailySpending).sort(([a],[b])=>a.localeCompare(b)).slice(-7);
   const maxDailySpending = Math.max(1, ...dailySpendingEntries.map(([,value])=>value));
