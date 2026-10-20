@@ -33,7 +33,7 @@ export type TasksResponse = { tasks: FamilyTask[] };
 export type TransactionsResponse = { requested_period: { date_from: string; date_to: string }; summary: { total_income: number | string; total_outcome: number | string; currency: Currency }; items: { transaction_id: string; title: string; timestamp: string; direction: 'INCOME' | 'OUTCOME'; amount: number | string; currency: Currency; category_code: string; related_entity: { type: 'TASK' | 'GOAL' | 'SYSTEM' | 'NONE'; id: string | null } }[] };
 export type AnalyticsResponse = { total_spent: number | string; currency: Currency; date_from: string; date_to: string; categories: { category_code: string; category_title: string; total_amount: number | string; percentage: number | string }[] };
 
-function parentHeaders(extra: Record<string, string> = {}): HeadersInit {
+function parentHeaders(extra: Record<string, string> = {}): Record<string, string> {
   return { Accept: 'application/json', 'Content-Type': 'application/json', 'X-Actor-User-Id': import.meta.env.VITE_PARENT_USER_ID || PARENT_USER_ID, ...extra };
 }
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
