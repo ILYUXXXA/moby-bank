@@ -18,6 +18,9 @@ export type FamilyChild = {
 };
 export type FamilyParent = { id: string; name: string; birth_date?: string; age?: number; role: 'MOTHER' | 'FATHER' | 'GUARDIAN'; avatar_url: string | null; family_id: string };
 export type FamilyResponse = { family_id: string; parents: FamilyParent[]; children: FamilyChild[] };
+export type FamilyCreateResponse = { family_id: string; currency: Currency; created_at: string };
+export type UserCreateResponse = { id: string; family_id: string; name: string; birth_date: string; avatar_url: string | null };
+export type ParentCreateResponse = UserCreateResponse & { parent_role: FamilyParent['role'] };
 export type ChildResponse = {
   child_info: { id: string; name: string; birth_date: string; age: number; avatar_url: string | null };
   balance_block: { amount: number | string; currency: Currency; card_id: string; card_bank: string; card_type: string; card_mask: string } | null;
@@ -73,11 +76,11 @@ export const getChildTransactions = (id: string, from: string, to: string) => ge
 export const getChildAnalytics = (id: string, from: string, to: string) => get<AnalyticsResponse>(`${parentChildPath(id)}/analytics?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`, mockAnalytics);
 
 export type TaskCreateInput = { title: string; description: string; reward_amount?: number | string; penalty_amount?: number | string; currency: Currency; payout_source_card_id?: string; deadline?: string };
-export const createFamily = (currency: Currency = 'BYN') => request<FamilyResponse>('/api/v1/families', { method: 'POST', headers: parentHeaders(), body: JSON.stringify({ currency }) });
+export const createFamily = (currency: Currency = 'BYN') => request<FamilyCreateResponse>('/api/v1/families', { method: 'POST', headers: parentHeaders(), body: JSON.stringify({ currency }) });
 export const createChild = (familyId: string, input: { name: string; birth_date: string; avatar_url?: string | null }) =>
-  request<FamilyChild>(`/api/v1/families/${encodeURIComponent(familyId)}/children`, { method: 'POST', headers: parentHeaders(), body: JSON.stringify(input) });
+  request<UserCreateResponse>(`/api/v1/families/${encodeURIComponent(familyId)}/children`, { method: 'POST', headers: parentHeaders(), body: JSON.stringify(input) });
 export const createParent = (familyId: string, input: { name: string; birth_date: string; avatar_url?: string | null; parent_role: FamilyParent['role'] }) =>
-  request<FamilyParent>(`/api/v1/families/${encodeURIComponent(familyId)}/parents`, { method: 'POST', headers: parentHeaders(), body: JSON.stringify(input) });
+  request<ParentCreateResponse>(`/api/v1/families/${encodeURIComponent(familyId)}/parents`, { method: 'POST', headers: parentHeaders(), body: JSON.stringify(input) });
 export const createTask = (childId: string, input: TaskCreateInput) =>
   request<FamilyTask>(`${parentChildPath(childId)}/tasks`, { method: 'POST', headers: parentHeaders(), body: JSON.stringify({ ...input, ...(input.reward_amount == null ? {} : { reward_amount: money(input.reward_amount) }), ...(input.penalty_amount == null ? {} : { penalty_amount: money(input.penalty_amount) }) }) });
 export const updateTask = (taskId: string, input: Partial<TaskCreateInput>) =>
