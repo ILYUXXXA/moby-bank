@@ -30,6 +30,13 @@ export type ChildResponse = {
   pending_tasks: unknown[];
   transactions_history: { period_start: string; period_end: string; items: unknown[] };
 };
+export type ChildAppDashboardResponse = {
+  child_info: { name: string; avatar_url: string | null };
+  balance_block: { active_balance: number | string; piggybank_balance: number | string; currency: Currency; card_mask: string | null } | null;
+  goals: { goal_id: string; title: string; current_amount: number | string; target_amount: number | string; currency: Currency }[];
+  tasks: { task_id: string; title: string; reward_amount: number | string; currency: Currency; status: TaskStatus }[];
+  recent_transactions: { transaction_id: string; title: string; category_code: string; category_title: string; timestamp: string; direction: 'INCOME' | 'OUTCOME'; amount: number | string; currency: Currency }[];
+};
 export type PiggybankResponse = { total_saved_amount: number | string; currency: Currency; goals: { goal_id: string; title: string; description: string | null; currency: Currency; current_amount: number | string; target_amount: number | string; status: 'IN_PROGRESS' | 'COMPLETED' | 'ARCHIVED'; created_at: string }[] };
 export type TaskStatus = 'IN_PROGRESS' | 'WAITING_REVIEW' | 'REJECTED_NEED_FIX' | 'COMPLETED' | 'CANCELLED';
 export type FamilyTask = { task_id: string; status: TaskStatus; title: string; description: string; reward_amount: number | string; penalty_amount: number | string; currency: Currency; rejection_comment: string | null; proof_photo_url: string | null; proof_submitted_at: string | null; created_at: string; deadline: string | null; created_by: { parent_id: string; name: string; avatar_url: string | null }; payout_source_card: { card_id: string; card_mask: string } | null };
@@ -74,6 +81,13 @@ async function get<T>(path: string, fallback: T): Promise<T> {
     return fallback;
   }
 }
+export const getChildAppDashboard = (id: string) => get<ChildAppDashboardResponse>(`/api/v1/child/${encodeURIComponent(id)}/dashboard`, {
+  child_info: { name: mockChild.child_info.name, avatar_url: mockChild.child_info.avatar_url },
+  balance_block: { active_balance: mockChild.balance_block.amount, piggybank_balance: mockChild.money_categories.piggy_bank.amount, currency: mockChild.balance_block.currency, card_mask: mockChild.balance_block.card_mask },
+  goals: mockPiggybank.goals.map(goal => ({ goal_id: goal.goal_id, title: goal.title, current_amount: goal.current_amount, target_amount: goal.target_amount, currency: goal.currency })),
+  tasks: mockTasks.tasks.map(task => ({ task_id: task.task_id, title: task.title, reward_amount: task.reward_amount, currency: task.currency, status: task.status })),
+  recent_transactions: [],
+});
 export const getFamily = () => get<FamilyResponse>(`/api/v1/family/my?family_id=${encodeURIComponent(ACTIVE_FAMILY_ID)}`, mockFamily);
 const parentChildPath = (id: string) => `/api/v1/parent/children/${encodeURIComponent(id)}`;
 export const getChild = (id: string) => get<ChildResponse>(parentChildPath(id), mockChild);
