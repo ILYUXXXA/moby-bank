@@ -4,7 +4,10 @@ import { FAMILY_ID, PARENT_USER_ID } from '../config/userIds';
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://yelisei-project.onrender.com').replace(/\/$/, '');
 const ACTIVE_FAMILY_ID = import.meta.env.VITE_FAMILY_ID || FAMILY_ID;
 const dataSources: Record<string, 'api' | 'mock'> = {};
-export const getDataSource = (path: string): 'api' | 'mock' => dataSources[path] ?? 'mock';
+export const getDataSource = (path: string): 'api' | 'mock' => {
+  const normalized = path.replace('/api/v1/children/', '/api/v1/parent/children/');
+  return dataSources[path] ?? dataSources[normalized] ?? 'mock';
+};
 
 export type Currency = 'BYN' | 'RUB' | 'USD' | 'EUR';
 export type FamilyChild = {
