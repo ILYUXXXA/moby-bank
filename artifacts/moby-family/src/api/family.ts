@@ -1,6 +1,7 @@
 import { mockFamily, mockChild, mockPiggybank, mockTasks, mockTransactions, mockAnalytics } from '../mocks/family';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+// Production API origin documented in Swagger. Override with VITE_API_BASE_URL for local/staging.
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://yelisei-project.onrender.com').replace(/\/$/, '');
 const dataSources: Record<string, 'api' | 'mock'> = {};
 export const getDataSource = (path: string): 'api' | 'mock' => dataSources[path] ?? 'mock';
 
@@ -29,18 +30,30 @@ export type TransactionsResponse = { requested_period: { date_from: string; date
 export type AnalyticsResponse = { total_spent: number; currency: 'BYN' | 'RUB' | 'USD' | 'EUR'; period_start: string; period_end: string; categories: { category_code: string; category_title: string; total_amount: number; percentage: number }[] };
 
 async function get<T>(path: string, fallback: T): Promise<T> {
+  const url = `${API_BASE_URL}${path}`;
   try {
-    const response = await fetch(`${API_BASE_URL}${path}`);
-    if (!response.ok) throw new Error(`GET ${path}: HTTP ${response.status}`);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '');
+      throw new Error(`GET ${url}: HTTP ${response.status}${detail ? ` — ${detail.slice(0, 180)}` : ''}`);
+    }
+    const contentType = response.headers.get('content-type') ?? '';
+    if (!contentType.toLowerCase().includes('json')) {
+      const detail = await response.text().catch(() => '');
+      throw new Error(`GET ${url}: expected JSON, received ${contentType || 'unknown content type'}${detail ? ` — ${detail.slice(0, 120)}` : ''}`);
+    }
     const data: unknown = await response.json();
-    if (data === null || typeof data !== 'object') {
-      throw new Error(`GET ${path}: response JSON is not an object`);
+    if (data === null || typeof data !== 'object' || Array.isArray(data)) {
+      throw new Error(`GET ${url}: response JSON must be an object`);
     }
     dataSources[path] = 'api';
     return data as T;
   } catch (error) {
     dataSources[path] = 'mock';
-    console.warn(`API unavailable; using mock data for ${path}`, error);
+    console.warn(`API request failed; showing mock fallback for ${url}`, error);
     return fallback;
   }
 }
