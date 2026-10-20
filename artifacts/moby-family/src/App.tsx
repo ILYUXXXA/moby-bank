@@ -88,7 +88,7 @@ function App() {
   const [parentMessages, setParentMessages] = useState(['Доброе утро! Не забудь взять карту в школу.']);
   const [messageDraft, setMessageDraft] = useState('');
   const [formError, setFormError] = useState('');
-  const currentChild = children.find(child => child.id === selected) ?? children[0];
+  const currentChild = children.find(child => child.id === selected) ?? (role === 'child' ? { id: currentUserId ?? CHILD_USER_ID, name: profileName, age: 12, balance: toAmount(balance), limit: 20 } : children[0]);
   const activeGoals = goals.length;
   const historyRef = useRef<HTMLElement | null>(null);
   const [historyFrom, setHistoryFrom] = useState('2026-10-12');
@@ -122,23 +122,15 @@ function App() {
       const title = String(data.get('name') || '').trim();
       const target = Number(data.get('target'));
       if (!title || !target || target < 1) { setFormError('Укажи название и сумму цели.'); return; }
-      if (role === 'parent') {
-        if (!currentChild?.id) { setFormError('Сначала выбери ребёнка.'); return; }
-        try {
-          const created = await createGoal(currentChild.id, { title, target_amount: target.toFixed(2), currency: apiPayloads.child?.balance_block?.currency ?? 'BYN' }) as any;
-          const goal = created?.goal ?? created;
-          const goalId = goal?.goal_id ?? goal?.id;
-          if (!goalId) throw new Error('API не вернул ID созданной цели');
-          const mappedGoal = { id: goalId, title: goal.title ?? title, saved: toAmount(goal.current_amount), target: toAmount(goal.target_amount ?? target), glyph: 'gift' as const };
-          setGoals(items => [...items, mappedGoal]);
-          const refreshed = await getChildPiggybank(currentChild.id);
-          setApiPayloads(current => ({ ...current, piggybank: refreshed }));
-          showToast('Цель создана через API');
-        } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось создать цель'); return; }
-      } else {
-        setGoals(items => [...items, { id: Date.now(), title, target, saved: 0, glyph: 'gift' }]);
-        showToast('Цель добавлена в демо-копилку');
-      }
+      if (!currentChild?.id) { setFormError('Не удалось определить ребёнка. Обнови данные и попробуй снова.'); return; }
+      try {
+        await createGoal(currentChild.id, { title, target_amount: target.toFixed(2), currency: apiPayloads.child?.balance_block?.currency ?? 'BYN' });
+        const refreshed = await getChildPiggybank(currentChild.id);
+        setApiPayloads(current => ({ ...current, piggybank: refreshed }));
+        setGoals(refreshed.goals.map(goal => ({ id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount), target: Math.max(1, toAmount(goal.target_amount)), glyph: 'gift' as const })));
+        setSavings(toAmount(refreshed.total_saved_amount));
+        showToast('Цель создана через API'); 
+      } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось создать цель'); return; }
     } else if (modal?.kind === 'topup') {
       const amount = Number(data.get('amount'));
       if (!amount || amount <= 0) { setFormError('Введи сумму больше нуля.'); return; }
