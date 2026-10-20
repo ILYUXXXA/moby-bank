@@ -249,7 +249,7 @@ function App() {
       const cardMask = String(data.get('card_mask') || '').trim();
       const initialBalance = Number(data.get('initial_balance') || 0);
       if (!currentChild?.id) { setFormError('Сначала выбери ребёнка.'); return; }
-      if (!bankName || !productName || !/^\\d{4}$/.test(cardMask) || !Number.isFinite(initialBalance) || initialBalance < 0) {
+      if (!bankName || !productName || !/^\d{4}$/.test(cardMask) || !Number.isFinite(initialBalance) || initialBalance < 0) {
         setFormError('Укажи банк, продукт, последние 4 цифры и корректный начальный баланс.'); return;
       }
       try {
