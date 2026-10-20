@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics, getDataSource, createChild, createParent, createTask, approveTask, rejectTask, submitTask, createGoal, topUpCard, contributeToGoal } from './api/family';
+import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics, getDataSource, createChild, createParent, createTask, approveTask, rejectTask, submitTask, createGoal, topUpCard, createCardTransfer, contributeToGoal, updateUser } from './api/family';
 import type { FamilyResponse, ChildResponse, PiggybankResponse, TasksResponse, TransactionsResponse, AnalyticsResponse } from './api/family';
 import { PARENT_USER_ID, CHILD_USER_ID, PARENT_CARD_ID } from './config/userIds';
 import {
@@ -146,11 +146,23 @@ function App() {
             setGoals(refreshed.goals.map(goal => ({ id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount), target: Math.max(1, toAmount(goal.target_amount)), glyph: 'gift' as const })));
             showToast('Цель пополнена через API');
           } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось пополнить цель'); return; }
+        } else if (modal.title === 'Перевести ребёнку' && childCardId) {
+          try {
+            await createCardTransfer(PARENT_CARD_ID, { destination_card_id: childCardId, amount: amount.toFixed(2), currency: apiPayloads.child?.balance_block?.currency ?? 'BYN', title: 'Перевод ребёнку' });
+            const [refreshedChild, refreshedTransactions] = await Promise.all([
+              getChild(selected),
+              getChildTransactions(selected, historyFrom, historyTo),
+            ]);
+            setApiPayloads(current => ({ ...current, child: refreshedChild, transactions: refreshedTransactions }));
+            setBalance(toAmount(refreshedChild.balance_block?.amount));
+            showToast('Перевод выполнен через API');
+          } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось перевести деньги'); return; }
         } else if (modal.title.includes('карту') && childCardId) {
           try {
             await topUpCard(childCardId, { amount: amount.toFixed(2), currency: apiPayloads.child?.balance_block?.currency ?? 'BYN', title: 'Пополнение карты' });
             const refreshed = await getChild(selected);
             setApiPayloads(current => ({ ...current, child: refreshed }));
+            setBalance(toAmount(refreshed.balance_block?.amount));
             showToast('Карта пополнена через API');
           } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось пополнить карту'); return; }
         } else {
@@ -232,8 +244,14 @@ function App() {
     } else if (modal?.kind === 'edit') {
       const name = String(data.get('name') || '').trim();
       if (!name) { setFormError('Имя не может быть пустым.'); return; }
-      setProfileName(name);
-      showToast('Имя профиля обновлено');
+      const profileUserId = role === 'child' ? (currentUserId ?? CHILD_USER_ID) : currentChild?.id;
+      if (!profileUserId) { setFormError('Не удалось определить профиль.'); return; }
+      try {
+        await updateUser(profileUserId, { name });
+        setProfileName(name);
+        setChildren(items => items.map(item => item.id === profileUserId ? { ...item, name } : item));
+        showToast('Имя профиля обновлено через API');
+      } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось изменить имя профиля'); return; }
     } else if (modal?.title.includes('карманные')) {
       const amount = Number(data.get('pocket'));
       if (!amount || amount < 1) { setFormError('Укажи сумму больше нуля.'); return; }
