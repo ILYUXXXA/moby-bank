@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics } from './api/family';
 import {
   ArrowLeft, ArrowUpRight, Award, Bell, Bike, Check, ChevronDown, ChevronRight,
   CircleHelp, CreditCard, Gamepad2, Home, MoreHorizontal, Pencil, Plus, ShieldCheck,
@@ -129,6 +130,51 @@ function App() {
   };
 
   useEffect(() => { document.title = 'Moby Family'; }, []);
+
+  // Load family when the parent opens the Family tab. API functions use mock data only on request failure.
+  useEffect(() => {
+    if (role !== 'parent' || parentTab !== 'family') return;
+    let cancelled = false;
+    getFamily().then(data => {
+      if (cancelled || !data.children?.length) return;
+      const mapped = data.children.map(child => ({
+        id: child.id,
+        name: child.name,
+        age: child.age,
+        balance: child.balance_summary.amount,
+        limit: 20,
+      }));
+      setChildren(mapped);
+      setSelected(current => mapped.some(child => child.id === current) ? current : mapped[0].id);
+    });
+    return () => { cancelled = true; };
+  }, [role, parentTab]);
+
+  // Load all read-only child endpoints when a parent opens the selected child's profile.
+  useEffect(() => {
+    if (role !== 'parent' || parentTab !== 'details' || !selected) return;
+    let cancelled = false;
+    const from = '2026-10-01';
+    const to = new Date().toISOString().slice(0, 10);
+    Promise.all([
+      getChild(selected),
+      getChildPiggybank(selected),
+      getChildTasks(selected),
+      getChildTransactions(selected, from, to),
+      getChildAnalytics(from, to),
+    ]).then(([child, piggybank, tasks, transactions, analytics]) => {
+      if (cancelled) return;
+      setChildren(current => current.map(item => item.id === selected ? {
+        ...item,
+        name: child.child_info.name,
+        age: child.child_info.age,
+        balance: child.balance_block.amount,
+      } : item));
+      // Keep responses available for the screen and debugging without changing the current layout.
+      console.info('Child profile data loaded', { piggybank, tasks, transactions, analytics });
+    });
+    return () => { cancelled = true; };
+  }, [role, parentTab, selected]);
   const sortedNotifications = useMemo(() => [
     {id:1,title:'Задание выполнено',copy:'Ты отлично справился с заданием «Навести порядок на столе». Награда уже на карте.',time:'Сегодня, 10:24',icon:Award},
     {id:2,title:'Накопления растут',copy:'В копилку добавлено 15 BYN. До цели «Наушники» осталось совсем немного.',time:'Сегодня, 09:10',icon:PiggyBank},
