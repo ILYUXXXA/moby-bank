@@ -1,7 +1,7 @@
 import { mockFamily, mockChild, mockPiggybank, mockTasks, mockTransactions, mockAnalytics } from '../mocks/family';
 import { FAMILY_ID, PARENT_USER_ID } from '../config/userIds';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://yelisei-project.onrender.com').replace(/\/$/, '');
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 const ACTIVE_FAMILY_ID = import.meta.env.VITE_FAMILY_ID || FAMILY_ID;
 const dataSources: Record<string, 'api' | 'mock'> = {};
 const canonicalPath = (path: string) => path.replace('/api/v1/children/', '/api/v1/parent/children/');
