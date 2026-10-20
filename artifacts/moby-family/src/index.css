@@ -393,3 +393,42 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .task-filter-chip { min-height:50px; }
   .child-choice { min-height:106px; }
 }
+
+
+/* Final responsive family tree layout: no oversized offsets, stable with any number of children. */
+.phone.parent .tree-zone.family-tree-raised {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-auto-rows:auto;
+  align-items:start;
+  gap:18px 16px;
+  margin:10px 24px 0;
+  min-height:0;
+  padding-bottom:6px;
+}
+.phone.parent .tree-zone .parent-person { position:relative; inset:auto; z-index:1; min-width:0; gap:8px; font-size:14px; }
+.phone.parent .tree-zone .parent-ico { width:76px; height:76px; }
+.phone.parent .tree-zone .parent-ico svg { width:30px; height:30px; }
+.phone.parent .tree-zone .child-choice {
+  position:relative; inset:auto; z-index:1;
+  width:100%; min-width:0; height:auto; min-height:144px;
+  margin:0; padding:14px 8px 12px; gap:0;
+  border:1px solid #edf1f8; border-radius:20px;
+  background:#fff; display:flex; flex-direction:column; align-items:center;
+}
+.phone.parent .tree-zone .child-choice.selected { background:#f5f7ff; border-color:#5363ff; box-shadow:0 0 0 2px #5363ff17; }
+.phone.parent .tree-zone .child-avatar { width:64px; height:64px; flex:0 0 64px; border-width:2px; }
+.phone.parent .tree-zone .child-avatar svg { width:34px; height:34px; }
+.phone.parent .tree-zone .child-choice strong { display:block; max-width:100%; margin-top:10px; font-size:15px; line-height:20px; overflow-wrap:anywhere; text-align:center; }
+.phone.parent .tree-zone .child-choice small { margin-top:4px; font-size:12px; }
+.phone.parent .tree-zone .tree-line { display:none; }
+.phone.parent .selection-tip { padding:16px 24px 18px; line-height:1.45; }
+.phone.parent .parent-confirm { padding:0 24px 16px; }
+@media (max-width:380px) {
+  .phone.parent .tree-zone.family-tree-raised { margin-left:16px; margin-right:16px; gap:14px 10px; }
+  .phone.parent .tree-zone .parent-ico { width:64px; height:64px; }
+  .phone.parent .tree-zone .child-choice { min-height:132px; padding:12px 5px 10px; }
+  .phone.parent .tree-zone .child-avatar { width:56px; height:56px; flex-basis:56px; }
+  .phone.parent .tree-zone .child-choice strong { font-size:13px; line-height:18px; }
+  .phone.parent .selection-tip { padding-left:16px; padding-right:16px; }
+}
