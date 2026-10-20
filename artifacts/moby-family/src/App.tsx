@@ -161,8 +161,8 @@ function App() {
         } else if (modal.title.includes('карту') && childCardId) {
           try {
             await topUpCard(childCardId, { amount: amount.toFixed(2), currency: apiPayloads.child?.balance_block?.currency ?? 'BYN', title: 'Пополнение карты' });
-            const refreshed = await getChild(selected);
-            setApiPayloads(current => ({ ...current, child: refreshed }));
+            const [refreshed, refreshedTransactions] = await Promise.all([getChild(selected), getChildTransactions(selected, historyFrom, historyTo)]);
+            setApiPayloads(current => ({ ...current, child: refreshed, transactions: refreshedTransactions }));
             setBalance(toAmount(refreshed.balance_block?.amount));
             showToast('Карта пополнена через API');
           } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось пополнить карту'); return; }
