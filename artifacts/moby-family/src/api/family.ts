@@ -147,7 +147,7 @@ export const updateUser = (userId: string, input: { name?: string; birth_date?: 
   jsonPatch<unknown>(`/api/v1/users/${idPath(userId)}`, input);
 export const updateCard = (cardId: string, input: { bank_name?: string; product_name?: string; card_mask?: string; status?: string; is_primary?: boolean }) =>
   jsonPatch<unknown>(`/api/v1/cards/${idPath(cardId)}`, input);
-export const updateGoal = (goalId: string, input: { title?: string; description?: string | null; target_amount?: number | string; status?: string }) =>
+export const updateGoal = (goalId: string, input: { title?: string; description?: string | null; target_amount?: number | string }) =>
   jsonPatch<unknown>(`/api/v1/goals/${idPath(goalId)}`, { ...input, ...(input.target_amount == null ? {} : { target_amount: money(input.target_amount) }) });
 export const updateMoneyLimit = (limitId: string, input: { limit_amount?: number | string; frequency?: 'DAILY' | 'WEEKLY' | 'MONTHLY'; valid_from?: string; valid_to?: string | null; is_active?: boolean }) =>
   jsonPatch<unknown>(`/api/v1/money-limits/${idPath(limitId)}`, { ...input, ...(input.limit_amount == null ? {} : { limit_amount: money(input.limit_amount) }) });
