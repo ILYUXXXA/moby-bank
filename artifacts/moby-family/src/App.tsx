@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics, getDataSource, createChild, createParent, createTask, approveTask, rejectTask, submitTask, createGoal, topUpCard, createCardTransfer, contributeToGoal, updateUser } from './api/family';
+import { getFamily, getChild, getChildAppDashboard, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics, getDataSource, createChild, createParent, createTask, approveTask, rejectTask, submitTask, createGoal, topUpCard, createCardTransfer, contributeToGoal, updateUser } from './api/family';
 import type { FamilyResponse, ChildResponse, PiggybankResponse, TasksResponse, TransactionsResponse, AnalyticsResponse } from './api/family';
 import { PARENT_USER_ID, CHILD_USER_ID, PARENT_CARD_ID } from './config/userIds';
 import {
@@ -269,16 +269,16 @@ function App() {
   useEffect(() => {
     if (role !== 'child' || !currentUserId) return;
     let cancelled = false;
-    Promise.all([getChild(currentUserId), getChildPiggybank(currentUserId), getChildTasks(currentUserId), getChildTransactions(currentUserId, historyFrom, historyTo), getChildAnalytics(currentUserId, analyticsFrom, analyticsTo)]).then(([data, piggybank, tasks, transactions, analytics]) => {
+    Promise.all([getChild(currentUserId), getChildPiggybank(currentUserId), getChildTasks(currentUserId), getChildTransactions(currentUserId, historyFrom, historyTo), getChildAnalytics(currentUserId, analyticsFrom, analyticsTo), getChildAppDashboard(currentUserId)]).then(([data, piggybank, tasks, transactions, analytics, childDashboard]) => {
       if (cancelled) return;
-      setProfileName(data?.child_info?.name ?? 'Ребёнок');
-      setBalance(toAmount(data?.balance_block?.amount));
-      setSavings(toAmount(data?.money_categories?.piggy_bank?.amount ?? piggybank?.total_saved_amount));
+      setProfileName(childDashboard?.child_info?.name ?? data?.child_info?.name ?? 'Ребёнок');
+      setBalance(toAmount(childDashboard?.balance_block?.active_balance ?? data?.balance_block?.amount));
+      setSavings(toAmount(childDashboard?.balance_block?.piggybank_balance ?? data?.money_categories?.piggy_bank?.amount ?? piggybank?.total_saved_amount));
       if (data?.child_info?.id) setSelected(data.child_info.id);
       const mappedGoals = (piggybank?.goals ?? []).map(goal => ({ id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount), target: Math.max(1, toAmount(goal.target_amount)), glyph: /науш|headphone/i.test(goal.title) ? 'headphones' as const : /велосип|bike/i.test(goal.title) ? 'bike' as const : /игр|game|пристав/i.test(goal.title) ? 'game' as const : /книг|конструкт|book/i.test(goal.title) ? 'book' as const : 'gift' as const }));
       setGoals(mappedGoals);
       setApiPayloads({ child: data, piggybank, tasks, transactions, analytics });
-      setApiSources(current => ({ ...current, child: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}`), piggybank: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}/piggybank`), tasks: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}/tasks`), transactions: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}/transactions?date_from=${encodeURIComponent(historyFrom)}&date_to=${encodeURIComponent(historyTo)}`), analytics: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}/analytics?date_from=${encodeURIComponent(analyticsFrom)}&date_to=${encodeURIComponent(analyticsTo)}`) }));
+      setApiSources(current => ({ ...current, childDashboard: getDataSource(`/api/v1/child/${encodeURIComponent(currentUserId)}/dashboard`), child: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}`), piggybank: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}/piggybank`), tasks: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}/tasks`), transactions: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}/transactions?date_from=${encodeURIComponent(historyFrom)}&date_to=${encodeURIComponent(historyTo)}`), analytics: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}/analytics?date_from=${encodeURIComponent(analyticsFrom)}&date_to=${encodeURIComponent(analyticsTo)}`) }));
     });
     return () => { cancelled = true; };
   }, [role, currentUserId, historyFrom, historyTo, analyticsFrom, analyticsTo]);
