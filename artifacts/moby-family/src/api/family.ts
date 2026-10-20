@@ -3,6 +3,8 @@ import { mockFamily, mockChild, mockPiggybank, mockTasks, mockTransactions, mock
 // Production API origin documented in Swagger. Override with VITE_API_BASE_URL for local/staging.
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://yelisei-project.onrender.com').replace(/\/$/, '');
 const dataSources: Record<string, 'api' | 'mock'> = {};
+// Swagger requires family_id for the temporary mock-stage family endpoint.
+const FAMILY_ID = import.meta.env.VITE_FAMILY_ID || mockFamily.family_id;
 export const getDataSource = (path: string): 'api' | 'mock' => dataSources[path] ?? 'mock';
 
 export type FamilyChild = {
@@ -57,9 +59,9 @@ async function get<T>(path: string, fallback: T): Promise<T> {
     return fallback;
   }
 }
-export const getFamily = () => get<FamilyResponse>('/api/family/my', mockFamily);
-export const getChild = (childId: string) => get<ChildResponse>(`/api/children/${encodeURIComponent(childId)}`, mockChild);
-export const getChildPiggybank = (childId: string) => get<PiggybankResponse>(`/api/children/${encodeURIComponent(childId)}/piggybank`, mockPiggybank);
-export const getChildTasks = (childId: string) => get<TasksResponse>(`/api/children/${encodeURIComponent(childId)}/tasks`, mockTasks);
-export const getChildTransactions = (childId: string, from: string, to: string) => get<TransactionsResponse>(`/api/children/${encodeURIComponent(childId)}/transactions?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`, mockTransactions);
-export const getChildAnalytics = (from: string, to: string) => get<AnalyticsResponse>(`/api/child/analytics?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`, mockAnalytics);
+export const getFamily = () => get<FamilyResponse>(`/api/v1/family/my?family_id=${encodeURIComponent(FAMILY_ID)}`, mockFamily);
+export const getChild = (childId: string) => get<ChildResponse>(`/api/v1/children/${encodeURIComponent(childId)}, mockChild);
+export const getChildPiggybank = (childId: string) => get<PiggybankResponse>(`/api/v1/children/${encodeURIComponent(childId)}/piggybank`, mockPiggybank);
+export const getChildTasks = (childId: string) => get<TasksResponse>(`/api/v1/children/${encodeURIComponent(childId)}/tasks`, mockTasks);
+export const getChildTransactions = (childId: string, from: string, to: string) => get<TransactionsResponse>(`/api/v1/children/${encodeURIComponent(childId)}/transactions?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`, mockTransactions);
+export const getChildAnalytics = (childId: string, from: string, to: string) => get<AnalyticsResponse>(`/api/v1/children/${encodeURIComponent(childId)}/analytics?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`, mockAnalytics);
