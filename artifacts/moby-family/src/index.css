@@ -375,3 +375,21 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .task-detail-card { padding:16px 14px 14px; }
   .task-filter-chip { gap:6px; padding:9px 8px; font-size:11px; }
 }
+
+
+/* Mobile app navigation polish */
+.phone-content > .brandbar { position:sticky; top:0; z-index:40; background:#fff; padding-top:max(6px, env(safe-area-inset-top)); box-sizing:border-box; box-shadow:0 1px 0 rgba(224,232,245,.72); }
+.tasks-page > .brandbar { background:#f4f7fd; }
+.parent .phone-content > .brandbar { background:#fff; }
+.family-tree-raised { margin-top:-10px; gap:8px 10px; }
+.child-choice { min-height:108px; border-radius:18px; padding:9px 6px; touch-action:manipulation; }
+.child-avatar { width:52px; height:52px; flex:0 0 52px; }
+.history-range { min-height:36px; touch-action:manipulation; }
+.task-filter-chip,.task-filter-all,.primary-btn,.secondary-btn,.back-role { touch-action:manipulation; }
+@media (max-width:600px) {
+  .phone-content { overscroll-behavior-y:contain; -webkit-overflow-scrolling:touch; }
+  .phone-content > .brandbar { min-height:54px; padding-left:18px; padding-right:18px; }
+  .tasks-page-head { padding-top:16px; }
+  .task-filter-chip { min-height:50px; }
+  .child-choice { min-height:106px; }
+}
