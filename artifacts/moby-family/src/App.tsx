@@ -146,7 +146,8 @@ function App() {
       if (!currentChild?.id) { setFormError('Сначала выбери ребёнка.'); return; }
       try {
         const result = await createTask(currentChild.id, { title, description, reward_amount: reward, penalty_amount: penalty, currency: apiPayloads.child?.balance_block?.currency ?? 'BYN', ...(deadlineValue ? { deadline: new Date(deadlineValue).toISOString() } : {}) });
-        setApiPayloads(current => ({ ...current, tasks: { tasks: [result.task, ...(current.tasks?.tasks ?? []).filter(task => task.task_id !== result.task.task_id)] } }));
+        const createdTask = (result as any).task ?? result;
+        setApiPayloads(current => ({ ...current, tasks: { tasks: [createdTask, ...(current.tasks?.tasks ?? []).filter(task => task.task_id !== createdTask.task_id)] } }));
         showToast('Задание создано через API');
       } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось создать задание'); return; }
     } else if (modal?.kind === 'member') {
