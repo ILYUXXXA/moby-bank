@@ -97,6 +97,7 @@ function App() {
   const [analyticsTo, setAnalyticsTo] = useState('2026-10-20');
   const [historyRefresh, setHistoryRefresh] = useState(0);
   const [apiError, setApiError] = useState('');
+  const [childCards, setChildCards] = useState<Record<string, ChildResponse>>({});
   const showToast = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2300); };
   const switchRole = (next: 'parent'|'child') => {
     // Demo mode selection only: this chooses a seeded database UUID, it is not authentication.
@@ -169,18 +170,19 @@ function App() {
   useEffect(() => {
     if (role !== 'child' || !currentUserId) return;
     let cancelled = false;
-    getChild(currentUserId).then(data => {
+    Promise.all([getChild(currentUserId), getChildPiggybank(currentUserId), getChildTasks(currentUserId), getChildTransactions(currentUserId, historyFrom, historyTo), getChildAnalytics(currentUserId, analyticsFrom, analyticsTo)]).then(([data, piggybank, tasks, transactions, analytics]) => {
       if (cancelled) return;
-      setProfileName(data.child_info.name);
+      setProfileName(data?.child_info?.name ?? 'Ребёнок');
       setBalance(toAmount(data?.balance_block?.amount));
-      setSavings(toAmount(data?.money_categories?.piggy_bank?.amount));
+      setSavings(toAmount(data?.money_categories?.piggy_bank?.amount ?? piggybank?.total_saved_amount));
       if (data?.child_info?.id) setSelected(data.child_info.id);
-      setGoals(current => current);
-      setApiPayloads(current => ({ ...current, child: data }));
-      setApiSources(current => ({ ...current, child: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}`) }));
+      const mappedGoals = (piggybank?.goals ?? []).map(goal => ({ id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount), target: Math.max(1, toAmount(goal.target_amount)), glyph: /науш|headphone/i.test(goal.title) ? 'headphones' as const : /велосип|bike/i.test(goal.title) ? 'bike' as const : /игр|game|пристав/i.test(goal.title) ? 'game' as const : /книг|конструкт|book/i.test(goal.title) ? 'book' as const : 'gift' as const }));
+      setGoals(mappedGoals);
+      setApiPayloads({ child: data, piggybank, tasks, transactions, analytics });
+      setApiSources(current => ({ ...current, child: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}`), piggybank: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}/piggybank`), tasks: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}/tasks`), transactions: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}/transactions?date_from=${encodeURIComponent(historyFrom)}&date_to=${encodeURIComponent(historyTo)}`), analytics: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}/analytics?date_from=${encodeURIComponent(analyticsFrom)}&date_to=${encodeURIComponent(analyticsTo)}`) }));
     });
     return () => { cancelled = true; };
-  }, [role, currentUserId]);
+  }, [role, currentUserId, historyFrom, historyTo, analyticsFrom, analyticsTo]);
 
   // Load family when the parent opens the Family tab. API functions use mock data only on request failure.
   useEffect(() => {
@@ -203,6 +205,17 @@ function App() {
     });
     return () => { cancelled = true; };
   }, [role, parentTab]);
+
+  // Populate card details for the Cards tab from the same child-profile GET endpoint.
+  useEffect(() => {
+    if (role !== 'parent' || parentTab !== 'products' || children.length === 0) return;
+    let cancelled = false;
+    Promise.all(children.map(async child => [child.id, await getChild(child.id)] as const)).then(entries => {
+      if (cancelled) return;
+      setChildCards(Object.fromEntries(entries));
+    });
+    return () => { cancelled = true; };
+  }, [role, parentTab, children.map(child => child.id).join('|')]);
 
   // Load all read-only child endpoints when a parent opens the selected child's profile.
   useEffect(() => {
