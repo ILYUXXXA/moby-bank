@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics, getDataSource } from './api/family';
 import type { FamilyResponse, ChildResponse, PiggybankResponse, TasksResponse, TransactionsResponse, AnalyticsResponse } from './api/family';
+import { PARENT_USER_ID, CHILD_USER_ID } from './config/userIds';
 import {
   ArrowLeft, ArrowUpRight, Award, Bell, Bike, Check, ChevronDown, ChevronRight,
   CircleHelp, CreditCard, Gamepad2, Home, MoreHorizontal, Pencil, Plus, ShieldCheck,
@@ -51,6 +52,7 @@ function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
 
 function App() {
   const [role, setRole] = useState<Role>('picker');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [parentTab, setParentTab] = useState('family');
   const [childTab, setChildTab] = useState('home');
   const [selected, setSelected] = useState('nikita');
@@ -83,7 +85,13 @@ function App() {
   const currentChild = children.find(child => child.id === selected) ?? children[0];
   const activeGoals = goals.length;
   const showToast = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2300); };
-  const switchRole = (next: 'parent'|'child') => { setRole(next); setParentTab('family'); setChildTab('home'); };
+  const switchRole = (next: 'parent'|'child') => {
+    // Demo mode selection only: this chooses a seeded database UUID, it is not authentication.
+    setCurrentUserId(next === 'parent' ? PARENT_USER_ID : CHILD_USER_ID);
+    setRole(next);
+    setParentTab('family');
+    setChildTab('home');
+  };
   const navigateChild = (key: string) => {
     setChildTab(key);
     if (key === 'notifications') setUnread([]);
@@ -142,6 +150,21 @@ function App() {
   };
 
   useEffect(() => { document.title = 'Moby Family'; }, []);
+
+  // In child demo mode, fetch the selected seeded child's profile using its real UUID.
+  useEffect(() => {
+    if (role !== 'child' || !currentUserId) return;
+    let cancelled = false;
+    getChild(currentUserId).then(data => {
+      if (cancelled) return;
+      setProfileName(data.child_info.name);
+      setBalance(data.balance_block.amount);
+      setSavings(data.money_categories.piggy_bank.amount);
+      setApiPayloads(current => ({ ...current, child: data }));
+      setApiSources(current => ({ ...current, child: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}`) }));
+    });
+    return () => { cancelled = true; };
+  }, [role, currentUserId]);
 
   // Load family when the parent opens the Family tab. API functions use mock data only on request failure.
   useEffect(() => {
@@ -206,7 +229,7 @@ function App() {
     {id:4,title:'Новая цель',copy:'Цель «Скейтборд» ждёт тебя в копилке. Каждый шаг приближает к мечте.',time:'12 октября',icon:Sparkles},
   ], []);
 
-  const rolePicker = <div className="app-stage"><div className="role-picker"><div className="role-brand">moby<em style={{fontSize:14,fontStyle:'italic',marginLeft:4}}>family</em></div><h1>Деньги —<br/>семейное дело.</h1><p>Выбери режим демо-приложения. Можно переключаться между родителем и ребёнком в любой момент.</p><button className="role-card" data-testid="role-parent" onClick={()=>switchRole('parent')}><span className="role-icon"><UsersRound size={26}/></span><span><b>Я родитель</b><small>Семья, дети и управление деньгами</small></span><ChevronRight className="role-arrow"/></button><button className="role-card" data-testid="role-child" onClick={()=>switchRole('child')}><span className="role-icon"><UserRound size={26}/></span><span><b>Я ребёнок</b><small>Главная, копилка и профиль Никиты</small></span><ChevronRight className="role-arrow"/></button><div className="role-foot">Демо-режим · Все данные хранятся только на этом устройстве</div></div></div>;
+  const rolePicker = <div className="app-stage"><div className="role-picker"><div className="role-brand">moby<em style={{fontSize:14,fontStyle:'italic',marginLeft:4}}>family</em></div><h1>Деньги —<br/>семейное дело.</h1><p>Выбери режим демо-приложения. Можно переключаться между родителем и ребёнком в любой момент.</p><button className="role-card" data-testid="role-parent" onClick={()=>switchRole('parent')}><span className="role-icon"><UsersRound size={26}/></span><span><b>Я родитель</b><small>Семья, дети и управление деньгами</small></span><ChevronRight className="role-arrow"/></button><button className="role-card" data-testid="role-child" onClick={()=>switchRole('child')}><span className="role-icon"><UserRound size={26}/></span><span><b>Я ребёнок</b><small>Главная, копилка и профиль Никиты</small></span><ChevronRight className="role-arrow"/></button><div className="role-foot">Демо-режим · выбраны тестовые ID из базы, входа в аккаунт нет</div></div></div>;
 
   const childHeader = (withGreeting = true) => <><div className="brandbar"><Brand/><IconButton label="Уведомления" testId="open-notifications" onClick={()=>navigateChild('notifications')}><Bell size={21}/>{unread.length>0&&<i style={{width:7,height:7,borderRadius:50,background:'#2169ff',position:'absolute',transform:'translate(8px,-8px)',border:'1.5px solid white'}}/>}</IconButton></div>{withGreeting&&<div className="greeting"><h1>Привет, {profileName}!</h1><button className="avatar-small" data-testid="open-profile" onClick={()=>navigateChild('profile')}>{profileName[0]}</button></div>}</>;
 
