@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics, getDataSource, createChild, createTask, approveTask, rejectTask } from './api/family';
+import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics, getDataSource, createChild, createParent, createTask, approveTask, rejectTask } from './api/family';
 import type { FamilyResponse, ChildResponse, PiggybankResponse, TasksResponse, TransactionsResponse, AnalyticsResponse } from './api/family';
 import { PARENT_USER_ID, CHILD_USER_ID } from './config/userIds';
 import {
@@ -156,16 +156,27 @@ function App() {
       if (!name || !age) { setFormError('Заполни имя и возраст.'); return; }
       if (!familyResponse?.family_id) { setFormError('Не удалось определить семью из API. Обнови вкладку «Семья» и попробуй снова.'); return; }
       const birthDate = birthDateInput || `${new Date().getFullYear() - age}-01-01`;
+      const memberRole = String(data.get('member_role') || 'CHILD');
       try {
-        const created = await createChild(familyResponse.family_id, { name, birth_date: birthDate });
-        const child = (created as any).child ?? created;
-        if (!child?.id) throw new Error('API создал запись, но не вернул id ребёнка');
-        const mapped = { id: child.id, name: child.name ?? name, age: Number(child.age ?? age), balance: toAmount(child.balance_summary?.amount), limit: 15 };
-        setChildren(items => [...items, mapped]);
-        setSelected(mapped.id);
-        setFamilyResponse(current => current ? { ...current, children: [...current.children, child] } : current);
-        showToast(`${mapped.name} добавлен(а) в семью`);
-      } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось добавить ребёнка'); return; }
+        if (memberRole === 'PARENT') {
+          const parentRole = String(data.get('parent_role') || 'GUARDIAN') as 'MOTHER' | 'FATHER' | 'GUARDIAN';
+          const created = await createParent(familyResponse.family_id, { name, birth_date: birthDate, parent_role: parentRole });
+          const parent = (created as any).parent ?? created;
+          if (!parent?.id) throw new Error('API создал запись родителя, но не вернул id');
+          setFamilyParents(items => [...items.filter(item => item.id !== parent.id), parent]);
+          setFamilyResponse(current => current ? { ...current, parents: [...current.parents.filter(item => item.id !== parent.id), parent] } : current);
+          showToast(`${parent.name ?? name} добавлен(а) в семью`);
+        } else {
+          const created = await createChild(familyResponse.family_id, { name, birth_date: birthDate });
+          const child = (created as any).child ?? created;
+          if (!child?.id) throw new Error('API создал запись, но не вернул id ребёнка');
+          const mapped = { id: child.id, name: child.name ?? name, age: Number(child.age ?? age), balance: toAmount(child.balance_summary?.amount), limit: 15 };
+          setChildren(items => [...items, mapped]);
+          setSelected(mapped.id);
+          setFamilyResponse(current => current ? { ...current, children: [...current.children, child] } : current);
+          showToast(`${mapped.name} добавлен(а) в семью`);
+        }
+      } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось добавить участника семьи'); return; }
     } else if (modal?.title === 'Отправить на доработку' && taskToReject) {
       const comment = String(data.get('rejection_comment') || '').trim();
       if (!comment) { setFormError('Добавь комментарий для ребёнка.'); return; }
