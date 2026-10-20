@@ -160,7 +160,7 @@ function App() {
       }));
       setChildren(mapped);
       setSelected(current => mapped.some(child => child.id === current) ? current : (mapped[0]?.id ?? '')); 
-      setApiSources(current => ({ ...current, family: getDataSource(`/api/v1/family/my?family_id=${encodeURIComponent(familyResponse?.family_id ?? '')}`) }));
+      setApiSources(current => ({ ...current, family: getDataSource(`/api/v1/family/my?family_id=${encodeURIComponent(data.family_id)}`) }));
     });
     return () => { cancelled = true; };
   }, [role, parentTab]);
