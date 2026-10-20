@@ -312,6 +312,10 @@ function App() {
     Promise.all(children.map(async child => [child.id, await getChild(child.id)] as const)).then(entries => {
       if (cancelled) return;
       setChildCards(Object.fromEntries(entries));
+      setApiSources(current => ({
+        ...current,
+        ...Object.fromEntries(entries.map(([id]) => [`card:${id}`, getDataSource(`/api/v1/parent/children/${encodeURIComponent(id)}`)])),
+      }));
     });
     return () => { cancelled = true; };
   }, [role, parentTab, children.map(child => child.id).join('|')]);
