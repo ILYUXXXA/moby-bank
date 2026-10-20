@@ -1,6 +1,8 @@
 import { mockFamily, mockChild, mockPiggybank, mockTasks, mockTransactions, mockAnalytics } from '../mocks/family';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+const dataSources: Record<string, 'api' | 'mock'> = {};
+export const getDataSource = (path: string): 'api' | 'mock' => dataSources[path] ?? 'mock';
 
 export type FamilyChild = {
   id: string; name: string; birth_date: string; age: number; avatar_url: string | null;
@@ -30,8 +32,14 @@ async function get<T>(path: string, fallback: T): Promise<T> {
   try {
     const response = await fetch(`${API_BASE_URL}${path}`);
     if (!response.ok) throw new Error(`GET ${path}: HTTP ${response.status}`);
-    return await response.json() as T;
+    const data: unknown = await response.json();
+    if (data === null || typeof data !== 'object') {
+      throw new Error(`GET ${path}: response JSON is not an object`);
+    }
+    dataSources[path] = 'api';
+    return data as T;
   } catch (error) {
+    dataSources[path] = 'mock';
     console.warn(`API unavailable; using mock data for ${path}`, error);
     return fallback;
   }
