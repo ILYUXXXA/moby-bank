@@ -33,6 +33,13 @@ export type ChildResponse = {
 export type PiggybankResponse = { total_saved_amount: number | string; currency: Currency; goals: { goal_id: string; title: string; description: string | null; currency: Currency; current_amount: number | string; target_amount: number | string; status: 'IN_PROGRESS' | 'COMPLETED' | 'ARCHIVED'; created_at: string }[] };
 export type TaskStatus = 'IN_PROGRESS' | 'WAITING_REVIEW' | 'REJECTED_NEED_FIX' | 'COMPLETED' | 'CANCELLED';
 export type FamilyTask = { task_id: string; status: TaskStatus; title: string; description: string; reward_amount: number | string; penalty_amount: number | string; currency: Currency; rejection_comment: string | null; proof_photo_url: string | null; proof_submitted_at: string | null; created_at: string; deadline: string | null; created_by: { parent_id: string; name: string; avatar_url: string | null }; payout_source_card: { card_id: string; card_mask: string } | null };
+export type TaskWriteResponse = {
+  task_id: string; child_id: string; created_by_user_id: string; payout_source_card_id: string | null;
+  status: TaskStatus; title: string; description: string; reward_amount: number | string; penalty_amount: number | string;
+  currency: Currency; rejection_comment: string | null; proof_photo_url: string | null; proof_submitted_at: string | null;
+  created_at: string; deadline: string | null;
+};
+export type TaskActionResponse = { task: TaskWriteResponse; transaction?: unknown };
 export type TasksResponse = { tasks: FamilyTask[] };
 export type TransactionsResponse = { requested_period: { date_from: string; date_to: string }; summary: { total_income: number | string; total_outcome: number | string; currency: Currency }; items: { transaction_id: string; title: string; timestamp: string; direction: 'INCOME' | 'OUTCOME'; amount: number | string; currency: Currency; category_code: string; related_entity: { type: 'TASK' | 'GOAL' | 'SYSTEM' | 'NONE'; id: string | null } }[] };
 export type AnalyticsResponse = { total_spent: number | string; currency: Currency; date_from: string; date_to: string; categories: { category_code: string; category_title: string; total_amount: number | string; percentage: number | string }[] };
@@ -82,17 +89,17 @@ export const createChild = (familyId: string, input: { name: string; birth_date:
 export const createParent = (familyId: string, input: { name: string; birth_date: string; avatar_url?: string | null; parent_role: FamilyParent['role'] }) =>
   request<ParentCreateResponse>(`/api/v1/families/${encodeURIComponent(familyId)}/parents`, { method: 'POST', headers: parentHeaders(), body: JSON.stringify(input) });
 export const createTask = (childId: string, input: TaskCreateInput) =>
-  request<FamilyTask>(`${parentChildPath(childId)}/tasks`, { method: 'POST', headers: parentHeaders(), body: JSON.stringify({ ...input, ...(input.reward_amount == null ? {} : { reward_amount: money(input.reward_amount) }), ...(input.penalty_amount == null ? {} : { penalty_amount: money(input.penalty_amount) }) }) });
+  request<TaskWriteResponse>(`${parentChildPath(childId)}/tasks`, { method: 'POST', headers: parentHeaders(), body: JSON.stringify({ ...input, ...(input.reward_amount == null ? {} : { reward_amount: money(input.reward_amount) }), ...(input.penalty_amount == null ? {} : { penalty_amount: money(input.penalty_amount) }) }) });
 export const updateTask = (taskId: string, input: Partial<TaskCreateInput>) =>
-  request<{ task: FamilyTask }>(`/api/v1/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: parentHeaders(), body: JSON.stringify({ ...input, ...(input.reward_amount == null ? {} : { reward_amount: money(input.reward_amount) }), ...(input.penalty_amount == null ? {} : { penalty_amount: money(input.penalty_amount) }) }) });
+  request<TaskWriteResponse>(`/api/v1/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: parentHeaders(), body: JSON.stringify({ ...input, ...(input.reward_amount == null ? {} : { reward_amount: money(input.reward_amount) }), ...(input.penalty_amount == null ? {} : { penalty_amount: money(input.penalty_amount) }) }) });
 export const approveTask = (taskId: string, idempotencyKey?: string) =>
-  request<{ task: FamilyTask; transaction?: unknown }>(`/api/v1/tasks/${encodeURIComponent(taskId)}/approve`, { method: 'POST', headers: parentHeaders(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}) });
+  request<TaskActionResponse>(`/api/v1/tasks/${encodeURIComponent(taskId)}/approve`, { method: 'POST', headers: parentHeaders(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}) });
 export const rejectTask = (taskId: string, rejection_comment: string) =>
-  request<{ task: FamilyTask; transaction?: unknown }>(`/api/v1/tasks/${encodeURIComponent(taskId)}/reject`, { method: 'POST', headers: parentHeaders(), body: JSON.stringify({ rejection_comment }) });
+  request<TaskActionResponse>(`/api/v1/tasks/${encodeURIComponent(taskId)}/reject`, { method: 'POST', headers: parentHeaders(), body: JSON.stringify({ rejection_comment }) });
 export const cancelTask = (taskId: string, idempotencyKey?: string) =>
-  request<{ task: FamilyTask; transaction?: unknown }>(`/api/v1/tasks/${encodeURIComponent(taskId)}/cancel`, { method: 'POST', headers: parentHeaders(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}) });
+  request<TaskActionResponse>(`/api/v1/tasks/${encodeURIComponent(taskId)}/cancel`, { method: 'POST', headers: parentHeaders(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}) });
 export const submitTask = (taskId: string, input: { proof_photo_url?: string; comment?: string }, actorId: string) =>
-  request<{ task: FamilyTask; transaction?: unknown }>(`/api/v1/tasks/${encodeURIComponent(taskId)}/submit`, { method: 'POST', headers: { 'X-Actor-User-Id': actorId, 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
+  request<TaskActionResponse>(`/api/v1/tasks/${encodeURIComponent(taskId)}/submit`, { method: 'POST', headers: { 'X-Actor-User-Id': actorId, 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
 
 
 // Parent write API — paths and payloads follow API_CONTRACTS.md.
