@@ -80,7 +80,7 @@ export const createParent = (familyId: string, input: { name: string; birth_date
 export const createTask = (childId: string, input: TaskCreateInput) =>
   request<{ task: FamilyTask }>(`${parentChildPath(childId)}/tasks`, { method: 'POST', headers: parentHeaders(), body: JSON.stringify({ ...input, ...(input.reward_amount == null ? {} : { reward_amount: money(input.reward_amount) }), ...(input.penalty_amount == null ? {} : { penalty_amount: money(input.penalty_amount) }) }) });
 export const updateTask = (taskId: string, input: Partial<TaskCreateInput>) =>
-  request<{ task: FamilyTask }>(`/api/v1/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: parentHeaders(), body: JSON.stringify(input) });
+  request<{ task: FamilyTask }>(`/api/v1/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: parentHeaders(), body: JSON.stringify({ ...input, ...(input.reward_amount == null ? {} : { reward_amount: money(input.reward_amount) }), ...(input.penalty_amount == null ? {} : { penalty_amount: money(input.penalty_amount) }) }) });
 export const approveTask = (taskId: string, idempotencyKey?: string) =>
   request<{ task: FamilyTask; transaction?: unknown }>(`/api/v1/tasks/${encodeURIComponent(taskId)}/approve`, { method: 'POST', headers: parentHeaders(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}) });
 export const rejectTask = (taskId: string, rejection_comment: string) =>
