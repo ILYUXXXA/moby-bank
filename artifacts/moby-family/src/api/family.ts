@@ -1,10 +1,11 @@
 import { mockFamily, mockChild, mockPiggybank, mockTasks, mockTransactions, mockAnalytics } from '../mocks/family';
+import { FAMILY_ID } from '../config/userIds';
 
 // Production API origin documented in Swagger. Override with VITE_API_BASE_URL for local/staging.
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://yelisei-project.onrender.com').replace(/\/$/, '');
 const dataSources: Record<string, 'api' | 'mock'> = {};
 // Swagger requires family_id for the temporary mock-stage family endpoint.
-const FAMILY_ID = import.meta.env.VITE_FAMILY_ID || mockFamily.family_id;
+const ACTIVE_FAMILY_ID = import.meta.env.VITE_FAMILY_ID || FAMILY_ID;
 export const getDataSource = (path: string): 'api' | 'mock' => dataSources[path] ?? 'mock';
 
 export type FamilyChild = {
@@ -59,7 +60,7 @@ async function get<T>(path: string, fallback: T): Promise<T> {
     return fallback;
   }
 }
-export const getFamily = () => get<FamilyResponse>(`/api/v1/family/my?family_id=${encodeURIComponent(FAMILY_ID)}`, mockFamily);
+export const getFamily = () => get<FamilyResponse>(`/api/v1/family/my?family_id=${encodeURIComponent(ACTIVE_FAMILY_ID)}`, mockFamily);
 export const getChild = (childId: string) => get<ChildResponse>(`/api/v1/children/${encodeURIComponent(childId)}`, mockChild);
 export const getChildPiggybank = (childId: string) => get<PiggybankResponse>(`/api/v1/children/${encodeURIComponent(childId)}/piggybank`, mockPiggybank);
 export const getChildTasks = (childId: string) => get<TasksResponse>(`/api/v1/children/${encodeURIComponent(childId)}/tasks`, mockTasks);
