@@ -38,7 +38,10 @@ function parentHeaders(extra: Record<string, string> = {}): Record<string, strin
 }
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${path}`;
-  const response = await fetch(url, { ...init, headers: { Accept: 'application/json', ...(init.body ? { 'Content-Type': 'application/json' } : {}), ...(init.headers ?? {}) } });
+  const headers = new Headers(init.headers);
+  if (!headers.has('Accept')) headers.set('Accept', 'application/json');
+  if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  const response = await fetch(url, { ...init, headers });
   const bodyText = await response.text();
   let body: unknown = null;
   if (bodyText) { try { body = JSON.parse(bodyText); } catch { body = bodyText; } }
