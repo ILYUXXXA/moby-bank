@@ -160,7 +160,7 @@ function App() {
       }));
       setChildren(mapped);
       setSelected(current => mapped.some(child => child.id === current) ? current : (mapped[0]?.id ?? '')); 
-      setApiSources(current => ({ ...current, family: getDataSource('/api/family/my') }));
+      setApiSources(current => ({ ...current, family: getDataSource(`/api/v1/family/my?family_id=${encodeURIComponent(familyResponse?.family_id ?? '')}`) }));
     });
     return () => { cancelled = true; };
   }, [role, parentTab]);
@@ -176,7 +176,7 @@ function App() {
       getChildPiggybank(selected),
       getChildTasks(selected),
       getChildTransactions(selected, from, to),
-      getChildAnalytics(from, to),
+      getChildAnalytics(selected, from, to),
     ]).then(([child, piggybank, tasks, transactions, analytics]) => {
       if (cancelled) return;
       setApiPayloads({ child, piggybank, tasks, transactions, analytics });
@@ -184,11 +184,11 @@ function App() {
       const to = new Date().toISOString().slice(0, 10);
       setApiSources(current => ({
         ...current,
-        child: getDataSource(`/api/children/${encodeURIComponent(selected)}`),
-        piggybank: getDataSource(`/api/children/${encodeURIComponent(selected)}/piggybank`),
-        tasks: getDataSource(`/api/children/${encodeURIComponent(selected)}/tasks`),
-        transactions: getDataSource(`/api/children/${encodeURIComponent(selected)}/transactions?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`),
-        analytics: getDataSource(`/api/child/analytics?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`),
+        child: getDataSource(`/api/v1/children/${encodeURIComponent(selected)}`),
+        piggybank: getDataSource(`/api/v1/children/${encodeURIComponent(selected)}/piggybank`),
+        tasks: getDataSource(`/api/v1/children/${encodeURIComponent(selected)}/tasks`),
+        transactions: getDataSource(`/api/v1/children/${encodeURIComponent(selected)}/transactions?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`),
+        analytics: getDataSource(`/api/v1/children/${encodeURIComponent(selected)}/analytics?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`),
       }));
       setChildren(current => current.map(item => item.id === selected ? {
         ...item,
