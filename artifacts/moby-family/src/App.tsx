@@ -34,7 +34,8 @@ const IconButton = ({ children, ...props }: { children: ReactNode; onClick?: () 
   <button className="icon-btn" aria-label={props.label} data-testid={props.testId} onClick={props.onClick}>{children}</button>
 );
 function StatusBar() {
-  return <div className="status"><span>9:41</span><div className="status-icons"><Signal size={14} strokeWidth={2.7}/><Wifi size={15} strokeWidth={2.5}/><span style={{ width: 20, height: 10, border: '1.5px solid currentColor', borderRadius: 3, display: 'inline-block', position: 'relative' }}><i style={{ display:'block',position:'absolute',inset:'2px 5px 2px 2px',background:'currentColor',borderRadius:1 }}/></span></div></div>;
+  // Native status indicators are provided by the device/browser, not by the app UI.
+  return null;
 }
 function Brand({ dark = false }: { dark?: boolean }) { return <div className={`brand ${dark ? 'dark' : ''}`} data-testid="text-brand">moby<em>family</em></div>; }
 function BottomNav({ active, onSelect, mode = 'child' }: { active: string; onSelect: (key: string) => void; mode?: 'child'|'parent' }) {
