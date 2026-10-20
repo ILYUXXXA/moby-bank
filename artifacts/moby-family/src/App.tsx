@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics, getDataSource } from './api/family';
 import type { FamilyResponse, ChildResponse, PiggybankResponse, TasksResponse, TransactionsResponse, AnalyticsResponse } from './api/family';
 import { PARENT_USER_ID, CHILD_USER_ID } from './config/userIds';
@@ -6,7 +6,7 @@ import {
   ArrowLeft, ArrowUpRight, Award, Bell, Bike, Check, ChevronDown, ChevronRight,
   CircleHelp, CreditCard, Gamepad2, Home, MoreHorizontal, Pencil, Plus, ShieldCheck,
   Signal, SlidersHorizontal, Sparkles, Wifi, X, UserRound, UsersRound, Wallet, BusFront,
-  Utensils, History, FileText, Settings, PiggyBank, type LucideIcon,
+  Utensils, History, FileText, Settings, PiggyBank, CalendarDays, ChevronLeft, BarChart3, Headphones, ShoppingBasket, Clapperboard, type LucideIcon,
 } from 'lucide-react';
 
 type Role = 'picker' | 'parent' | 'child';
@@ -16,7 +16,7 @@ function toAmount(value: unknown): number {
   const parsed = typeof value === 'number' ? value : Number(String(value ?? '').trim().replace(',', '.'));
   return Number.isFinite(parsed) ? parsed : 0;
 }
-type Goal = { id: number; title: string; saved: number; target: number; glyph: 'headphones'|'bike'|'game'|'book'|'gift' };
+type Goal = { id: string | number; title: string; saved: number; target: number; glyph: 'headphones'|'bike'|'game'|'book'|'gift' };
 type ModalKind = 'goal'|'topup'|'task'|'member'|'edit'|'generic';
 type ModalState = { title: string; kind: ModalKind; description?: string } | null;
 
@@ -89,10 +89,19 @@ function App() {
   const [formError, setFormError] = useState('');
   const currentChild = children.find(child => child.id === selected) ?? children[0];
   const activeGoals = goals.length;
+  const historyRef = useRef<HTMLDivElement | null>(null);
+  const [historyFrom, setHistoryFrom] = useState('2026-10-12');
+  const [historyTo, setHistoryTo] = useState('2026-10-20');
+  const [analyticsRange, setAnalyticsRange] = useState<'week'|'month'|'year'>('week');
+  const [analyticsFrom, setAnalyticsFrom] = useState('2026-10-14');
+  const [analyticsTo, setAnalyticsTo] = useState('2026-10-20');
+  const [historyRefresh, setHistoryRefresh] = useState(0);
+  const [apiError, setApiError] = useState('');
   const showToast = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2300); };
   const switchRole = (next: 'parent'|'child') => {
     // Demo mode selection only: this chooses a seeded database UUID, it is not authentication.
     setCurrentUserId(next === 'parent' ? PARENT_USER_ID : CHILD_USER_ID);
+    if (next === 'child') setSelected(CHILD_USER_ID);
     setRole(next);
     setParentTab('family');
     setChildTab('home');
@@ -163,8 +172,10 @@ function App() {
     getChild(currentUserId).then(data => {
       if (cancelled) return;
       setProfileName(data.child_info.name);
-      setBalance(toAmount(data.balance_block.amount));
-      setSavings(toAmount(data.money_categories.piggy_bank.amount));
+      setBalance(toAmount(data?.balance_block?.amount));
+      setSavings(toAmount(data?.money_categories?.piggy_bank?.amount));
+      if (data?.child_info?.id) setSelected(data.child_info.id);
+      setGoals(current => current);
       setApiPayloads(current => ({ ...current, child: data }));
       setApiSources(current => ({ ...current, child: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}`) }));
     });
@@ -197,8 +208,8 @@ function App() {
   useEffect(() => {
     if (role !== 'parent' || parentTab !== 'details' || !selected) return;
     let cancelled = false;
-    const from = '2026-10-01';
-    const to = new Date().toISOString().slice(0, 10);
+    const from = historyFrom;
+    const to = historyTo;
     Promise.all([
       getChild(selected),
       getChildPiggybank(selected),
@@ -208,8 +219,14 @@ function App() {
     ]).then(([child, piggybank, tasks, transactions, analytics]) => {
       if (cancelled) return;
       setApiPayloads({ child, piggybank, tasks, transactions, analytics });
-      const from = '2026-10-01';
-      const to = new Date().toISOString().slice(0, 10);
+      setApiError('');
+      const mappedGoals = (piggybank?.goals ?? []).map(goal => ({
+        id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount), target: Math.max(1, toAmount(goal.target_amount)),
+        glyph: /науш|headphone/i.test(goal.title) ? 'headphones' as const : /велосип|bike/i.test(goal.title) ? 'bike' as const : /игр|game|пристав/i.test(goal.title) ? 'game' as const : /книг|конструкт|book/i.test(goal.title) ? 'book' as const : 'gift' as const,
+      }));
+      setGoals(mappedGoals);
+      const from = historyFrom;
+      const to = historyTo;
       setApiSources(current => ({
         ...current,
         child: getDataSource(`/api/v1/children/${encodeURIComponent(selected)}`),
@@ -226,7 +243,7 @@ function App() {
       } : item));
     });
     return () => { cancelled = true; };
-  }, [role, parentTab, selected]);
+  }, [role, parentTab, selected, historyFrom, historyTo, historyRefresh]);
   const sortedNotifications = useMemo(() => [
     {id:1,title:'Задание выполнено',copy:'Ты отлично справился с заданием «Навести порядок на столе». Награда уже на карте.',time:'Сегодня, 10:24',icon:Award},
     {id:2,title:'Накопления растут',copy:'В копилку добавлено 15 BYN. До цели «Наушники» осталось совсем немного.',time:'Сегодня, 09:10',icon:PiggyBank},
