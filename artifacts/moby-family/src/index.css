@@ -1328,7 +1328,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 .learning-screen .map-branch-three {
   height: 62px;
-  margin: -14px 0 0;
+  margin: 0;
 }
 .learning-screen .map-connector path {
   vector-effect: non-scaling-stroke;
