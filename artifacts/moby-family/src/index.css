@@ -432,3 +432,72 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .phone.parent .tree-zone .child-choice strong { font-size:13px; line-height:18px; }
   .phone.parent .selection-tip { padding-left:16px; padding-right:16px; }
 }
+
+/* Child financial-literacy learning flow */
+.learning-screen,.lesson-screen{background:#f7f8ff!important;padding-bottom:28px!important;color:#4b6285}
+.learning-screen .brandbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.nut-balance{background:#fff5d9;color:#a87927;border-radius:28px;padding:10px 16px;font-weight:800;white-space:nowrap}
+.learning-title{font-size:clamp(30px,7vw,42px);line-height:1.15;letter-spacing:-.8px;margin:20px 0 16px;font-weight:850;color:#4b6285}
+.learning-subtitle{font-size:17px;line-height:1.5;color:#91a2c2;margin:0 0 24px}
+.map-eyebrow{font-size:13px;font-weight:800;color:#5960ff;letter-spacing:.3px;margin-bottom:20px}
+.learning-map{padding:4px 0 18px;text-align:center;overflow:hidden}
+.map-node{display:flex;align-items:center;flex-direction:column;gap:8px;position:relative;z-index:1}
+.map-node b{display:grid;place-items:center;width:76px;height:76px;border-radius:26px;border:3px solid #e1e6f4;background:white;color:#8b9dbb;font-size:31px}
+.map-node strong{font-size:14px;line-height:1.3;color:#4b6285}
+.map-node small{font-size:12px;color:#91a2c2;font-weight:700}
+.map-start{width:220px;margin:0 auto 10px;padding:0 20px 12px;border-radius:50%;background:#ededff;cursor:pointer}
+.map-start small{color:#5960ff}
+.map-start b{background:#5960ff;color:white;border:7px solid #cfd2ff;width:84px;height:84px}
+.map-start strong{color:#5960ff;font-size:16px}
+.map-connector{font-size:36px;line-height:1;color:#c9d1e4;margin:0 auto 12px}
+.map-locked{cursor:default}
+.map-branches{display:flex;justify-content:space-around;color:#c9d1e4;font-size:35px;margin:0 auto 10px;max-width:310px;height:32px}
+.map-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.map-branches-wide{max-width:100%;margin-top:12px}
+.map-triple{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.map-triple .map-node b{width:64px;height:64px;border-radius:22px;font-size:27px}
+.map-triple .map-node strong{font-size:12px;min-height:30px}
+.start-lesson-card{background:white;border-radius:28px;padding:22px 20px;margin:10px 0 0}
+.start-lesson-card h2{font-size:23px;margin:0 0 8px}
+.start-lesson-card p{display:flex;justify-content:space-between;gap:8px;align-items:center;color:#91a2c2;margin:0 0 20px;font-size:14px}
+.start-lesson-card p b{color:#a87927;white-space:nowrap}
+.primary-btn{width:100%;border:0;border-radius:20px;background:#5960f5;color:white;font-size:17px;font-weight:750;padding:18px 16px;cursor:pointer}
+.learning-task-card{width:100%;display:flex;align-items:center;gap:14px;text-align:left;padding:18px;border:0;border-radius:22px;background:white;color:#4b6285;margin:10px 0;box-shadow:0 4px 20px #4b62850a}
+.learning-task-card>span:nth-child(2){display:flex;flex:1;flex-direction:column;gap:6px}
+.learning-task-card small{color:#91a2c2}
+.lesson-number{display:grid;place-items:center;background:#ededff;color:#5960ff;border-radius:12px;width:38px;height:38px;font-weight:800}
+.learning-note{background:#ededff;border-radius:18px;padding:16px;color:#788caf;line-height:1.5;margin-top:18px}
+.lesson-top{display:flex;align-items:center;gap:12px;margin:8px 0 22px}
+.lesson-top>div{flex:1;min-width:0}
+.lesson-top small{font-size:10px;color:#91a2c2;font-weight:800}
+.lesson-top h1{font-size:21px;line-height:1.2;margin:5px 0 0}
+.back-pill{border:0;background:white;border-radius:15px;width:46px;height:46px;color:#4b6285}
+.lesson-tabs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.lesson-tabs button{background:transparent;border:0;border-bottom:3px solid #e1e6f4;padding:12px 4px;color:#91a2c2;font-weight:750}
+.lesson-tabs button.selected{color:#5960ff;border-color:#5960ff}
+.lesson-video{height:230px;background:#ededff;border-radius:24px;position:relative;display:grid;place-items:center;margin-bottom:22px;overflow:hidden}
+.lesson-video>button{border:0;background:#5960f5;color:white;border-radius:50%;width:82px;height:82px;font-size:32px;padding-left:8px;box-shadow:0 10px 24px #5960f52b}
+.lesson-video>span{position:absolute;right:16px;bottom:52px;background:#4b6285;color:white;border-radius:20px;padding:3px 12px;font-size:12px}
+.lesson-video footer{position:absolute;bottom:0;left:0;right:0;background:white;padding:15px;font-size:14px;font-weight:750}
+.lesson-heading{font-size:29px;line-height:1.2;margin:0 0 14px}
+.lesson-copy{font-size:16px;line-height:1.55;margin-bottom:20px}
+.lesson-info{background:white;border-radius:24px;padding:20px;margin-bottom:20px}
+.lesson-info b{display:block;font-size:15px;margin:8px 0}
+.lesson-info p{font-size:14px;line-height:1.5;color:#91a2c2;margin:0 0 18px}
+.lesson-info p:last-child{margin-bottom:0}
+.lesson-cta{margin:12px 0 4px}
+.lesson-progress{display:flex;justify-content:space-between;align-items:center;margin:8px 0 14px;font-size:13px}
+.lesson-progress span{color:#91a2c2}
+.quiz-card{background:white;border-radius:20px;padding:17px;margin-bottom:14px}
+.quiz-card>b{font-size:14px;line-height:1.45;display:block}
+.quiz-card>p{font-size:12px;color:#91a2c2;margin:10px 0}
+.quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.quiz-options button{min-height:52px;border:1px solid #e1e6f4;border-radius:13px;background:#f7f8ff;color:#4b6285;font-weight:650}
+.quiz-options button.chosen{border-color:#5960f5;background:#ededff;color:#5960f5}
+.quiz-three{grid-template-columns:repeat(3,1fr)}
+.quiz-three button{display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px}
+.quiz-three small{font-size:10px;color:#91a2c2;font-weight:500}
+.answer-good,.answer-bad{display:block;margin-top:10px;line-height:1.4}
+.answer-good{color:#258767}.answer-bad{color:#c96a4c}
+.lesson-success{padding:16px;border-radius:18px;background:#eaf7f1;color:#258767;margin:14px 0;line-height:1.5}
+@media(min-width:520px){.learning-screen,.lesson-screen{padding-left:28px!important;padding-right:28px!important}.map-triple .map-node b{width:72px;height:72px}}
