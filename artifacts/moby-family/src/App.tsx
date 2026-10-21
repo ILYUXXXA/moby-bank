@@ -3,7 +3,7 @@ import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransact
 import type { FamilyResponse, ChildResponse, PiggybankResponse, TasksResponse, TransactionsResponse, AnalyticsResponse } from './api/family';
 import { PARENT_USER_ID, CHILD_USER_ID } from './config/userIds';
 import {
-  ArrowLeft, ArrowUpRight, Award, Bell, Bike, Check, ChevronDown, ChevronRight,
+  ArrowLeft, ArrowUpRight, Award, Bell, Bike, Camera, Check, CheckCircle2, Clock3, Hourglass, ChevronDown, ChevronRight,
   CircleHelp, CreditCard, Gamepad2, Home, MoreHorizontal, Pencil, Plus, ShieldCheck,
   Signal, SlidersHorizontal, Sparkles, Wifi, X, UserRound, UsersRound, Wallet, BusFront,
   Utensils, History, FileText, Settings, PiggyBank, CalendarDays, ChevronLeft, BarChart3, Headphones, ShoppingBasket, Landmark, LockKeyhole, type LucideIcon,
