@@ -649,3 +649,229 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
  .learning-screen .start-lesson-card { padding:18px 16px; }
  .learning-screen .start-lesson-heading .reward { font-size:17px; }
 }
+
+
+/* Learning map and lesson screens: align with the supplied mobile references. */
+.learning-screen .learning-title {
+  margin: 18px 0 10px;
+  font-size: 32px;
+  line-height: 1.12;
+  letter-spacing: -0.7px;
+  color: #29476e;
+}
+.learning-screen .learning-subtitle {
+  margin-bottom: 22px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #91a2bd;
+}
+.learning-screen .map-eyebrow {
+  margin-bottom: 12px;
+  font-size: 10px;
+  letter-spacing: .8px;
+  color: #7b8da9;
+}
+.learning-screen .learning-map {
+  position: relative;
+  padding: 2px 0 8px;
+  overflow: hidden;
+}
+.learning-screen .map-node {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+}
+.learning-screen .map-node b {
+  width: 60px;
+  height: 60px;
+  border: 3px solid #e1e8f5;
+  border-radius: 21px;
+  background: #fff;
+  color: #91a2bd;
+  font-size: 25px;
+  box-shadow: 0 5px 12px rgba(54, 79, 119, .06);
+}
+.learning-screen .map-node strong {
+  max-width: 112px;
+  font-size: 11px;
+  line-height: 1.25;
+  color: #536b8d;
+}
+.learning-screen .map-start {
+  width: 178px;
+  min-height: 178px;
+  padding: 12px 14px 14px;
+  margin: 0 auto 2px;
+  border-radius: 50%;
+  background: #eeefff;
+}
+.learning-screen .map-start b {
+  width: 72px;
+  height: 72px;
+  border: 6px solid #d4d7ff;
+  border-radius: 25px;
+  background: #5b61f6;
+  color: #fff;
+  font-size: 28px;
+}
+.learning-screen .map-start strong {
+  color: #5259e8;
+  font-size: 13px;
+}
+.learning-screen .map-start small {
+  font-size: 9px;
+  letter-spacing: .8px;
+  color: #7379e9;
+}
+.learning-screen .map-connector path {
+  fill: none;
+  stroke: #cbd5e8;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.learning-screen .map-down {
+  width: 40px;
+  height: 34px;
+  margin: 0 auto 3px;
+}
+.learning-screen .map-down svg {
+  width: 40px;
+  height: 34px;
+}
+.learning-screen .map-branch-two,
+.learning-screen .map-branch-three {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+.learning-screen .map-lock {
+  color: #a4b2c8;
+}
+.learning-screen .map-side-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 20px;
+  background: #fff;
+  color: #7b8fe9;
+  box-shadow: 0 7px 18px rgba(54, 79, 119, .07);
+}
+.learning-screen .map-side-icon svg {
+  width: 30px;
+  height: 30px;
+}
+.learning-screen .map-pair {
+  gap: 8px;
+}
+.learning-screen .map-triple {
+  gap: 3px;
+}
+.learning-screen .map-triple .map-node b {
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  font-size: 22px;
+}
+.learning-screen .map-triple .map-node strong {
+  min-height: 28px;
+  font-size: 10px;
+}
+.learning-screen .start-lesson-card {
+  margin-top: 8px;
+  padding: 18px 16px;
+  border-radius: 22px;
+  box-shadow: 0 7px 22px rgba(54, 79, 119, .05);
+}
+.learning-screen .start-lesson-heading {
+  margin-bottom: 16px;
+}
+.learning-screen .start-lesson-heading h2 {
+  font-size: 19px;
+  color: #29476e;
+}
+.learning-screen .start-lesson-heading p {
+  font-size: 12px;
+}
+.learning-screen .start-lesson-heading .reward {
+  font-size: 17px;
+}
+.learning-screen .primary-btn {
+  min-height: 54px;
+  border-radius: 17px;
+  font-size: 15px;
+}
+.lesson-screen .lesson-top {
+  gap: 10px;
+  margin: 4px 0 18px;
+}
+.lesson-screen .lesson-top h1 {
+  color: #29476e;
+  font-size: 19px;
+}
+.lesson-screen .lesson-tabs {
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.lesson-screen .lesson-video {
+  height: 205px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #e8edff, #dfe7fb);
+}
+.lesson-screen .lesson-heading {
+  color: #29476e;
+  font-size: 24px;
+  margin-bottom: 9px;
+}
+.lesson-screen .lesson-copy {
+  color: #7185a5;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.lesson-screen .lesson-info {
+  padding: 16px;
+  border-radius: 20px;
+}
+.lesson-screen .lesson-info b {
+  color: #29476e;
+  font-size: 13px;
+}
+.lesson-screen .lesson-info p {
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 13px;
+}
+.lesson-screen .lesson-progress {
+  color: #29476e;
+  font-size: 12px;
+}
+.lesson-screen .quiz-card {
+  padding: 15px;
+  border: 1px solid #edf0f8;
+  border-radius: 18px;
+  box-shadow: 0 5px 16px rgba(54, 79, 119, .04);
+}
+.lesson-screen .quiz-card > b {
+  color: #29476e;
+  font-size: 13px;
+}
+.lesson-screen .quiz-options button {
+  min-height: 46px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+.lesson-screen .lesson-success {
+  border: 1px solid #d7f0e5;
+  font-size: 12px;
+}
+@media (max-width: 390px) {
+  .learning-screen .learning-title { font-size: 30px; }
+  .learning-screen .map-start { width: 160px; min-height: 160px; }
+  .learning-screen .map-start b { width: 66px; height: 66px; }
+  .learning-screen .map-node b { width: 54px; height: 54px; }
+  .learning-screen .map-triple .map-node b { width: 46px; height: 46px; }
+  .learning-screen .map-triple .map-node strong { font-size: 9px; }
+  .lesson-screen .lesson-video { height: 190px; }
+}
