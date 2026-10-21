@@ -1276,3 +1276,22 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .learning-screen .map-node:not(.map-start) strong { font-size: 10px; }
   .learning-screen .map-triple .map-node strong { font-size: 9px; }
 }
+
+
+.learning-screen .map-node.map-available:not(.map-start) b {
+  border-color: #cbd1ff;
+  background: #f1f2ff;
+  color: #5960f5;
+}
+.learning-screen .map-node.map-available:not(.map-start) .map-node-state {
+  margin-top: 0;
+  font-size: 8px;
+  color: #626be8;
+}
+.learning-screen .map-node.map-locked {
+  cursor: not-allowed;
+}
+.learning-screen .map-node.map-locked b {
+  background: #fff;
+  color: #9aaac4;
+}
