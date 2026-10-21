@@ -503,40 +503,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 @media(min-width:520px){.learning-screen,.lesson-screen{padding-left:28px!important;padding-right:28px!important}.map-triple .map-node b{width:72px;height:72px}}
 
 
-/* Golden nut token: custom shell, not an emoji; scales cleanly on mobile. */
+/* Golden nut drawn as a small SVG shell with the supplied Figma colors and groove. */
 .golden-nut{
-  position:relative;
   display:inline-block;
   flex:none;
   vertical-align:middle;
-  box-sizing:border-box;
-  border:0.8px solid #966d29;
-  border-radius:46% 44% 48% 46%;
-  background:linear-gradient(180deg,#fff0bb 0%,#e9bf62 45%,#be8833 100%);
-  box-shadow:inset 0 1px 1px #fff9d8b8,inset 0 -1px 1px #95651f55;
-  transform:rotate(-7deg);
-}
-.golden-nut::before{
-  content:"";
-  position:absolute;
-  inset:2px 4px 2px 5px;
-  box-sizing:border-box;
-  border:1.1px solid #966d29;
-  border-top-color:#c18a35;
-  border-bottom-color:#c18a35;
-  border-radius:48% 45% 50% 42%;
-  opacity:.7;
-}
-.golden-nut i{
-  position:absolute;
-  top:2px;
-  bottom:2px;
-  left:48%;
-  width:2px;
-  border-left:1px solid #966d29;
-  border-radius:50%;
-  opacity:.72;
-  transform:rotate(8deg);
+  overflow:visible;
 }
 .nut-balance{display:inline-flex;align-items:center;gap:6px}
 .start-lesson-card p b{display:inline-flex;align-items:center;gap:5px}
