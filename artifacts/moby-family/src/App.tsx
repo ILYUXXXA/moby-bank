@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics, getDataSource, createChild, createParent, createTask, approveTask, rejectTask, createGoal, topUpCard, contributeToGoal } from './api/family';
+import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics, getChildDashboard, getChildPiggybankAsChild, getChildTasksAsChild, getChildTransactionsAsChild, getChildAnalyticsAsChild, getDataSource, getUserCards, createChild, createParent, createTask, approveTask, rejectTask, createGoal, createCardTransfer, contributeToGoal, submitTask } from './api/family';
 import type { FamilyResponse, ChildResponse, PiggybankResponse, TasksResponse, TransactionsResponse, AnalyticsResponse } from './api/family';
 import { PARENT_USER_ID, CHILD_USER_ID } from './config/userIds';
 import {
@@ -17,7 +17,7 @@ function toAmount(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 type Goal = { id: string | number; title: string; saved: number; target: number; glyph: 'headphones'|'bike'|'game'|'book'|'gift' };
-type ModalKind = 'goal'|'topup'|'task'|'member'|'edit'|'generic';
+type ModalKind = 'goal'|'topup'|'task'|'proof'|'member'|'edit'|'generic';
 type ModalState = { title: string; kind: ModalKind; description?: string } | null;
 
 const initialChildren: ChildRecord[] = [
@@ -60,9 +60,9 @@ function App() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [parentTab, setParentTab] = useState('family');
   const [childTab, setChildTab] = useState('home');
-  const [selected, setSelected] = useState('nikita');
+  const [selected, setSelected] = useState(CHILD_USER_ID);
   const [confirmed, setConfirmed] = useState(false);
-  const [children, setChildren] = useState<ChildRecord[]>(initialChildren);
+  const [children, setChildren] = useState<ChildRecord[]>([]);
   const [familyResponse, setFamilyResponse] = useState<FamilyResponse | null>(null);
   const [familyParents, setFamilyParents] = useState<FamilyResponse['parents']>([]);
   const [apiPayloads, setApiPayloads] = useState<{
@@ -72,8 +72,8 @@ function App() {
     transactions: TransactionsResponse | null;
     analytics: AnalyticsResponse | null;
   }>({ child: null, piggybank: null, tasks: null, transactions: null, analytics: null });
-  const [apiSources, setApiSources] = useState<Record<string, 'api' | 'mock'>>({});
-  const [goals, setGoals] = useState<Goal[]>(initialGoals);
+  const [apiSources, setApiSources] = useState<Record<string, 'api' | 'mock' | 'error'>>({});
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [balance, setBalance] = useState(15.4);
   const [savings, setSavings] = useState(100);
   const [modal, setModal] = useState<ModalState>(null);
@@ -98,11 +98,13 @@ function App() {
   const [analyticsFrom, setAnalyticsFrom] = useState('2026-10-14');
   const [analyticsTo, setAnalyticsTo] = useState('2026-10-20');
   const [childCards, setChildCards] = useState<Record<string, ChildResponse>>({});
+  const [taskToSubmit, setTaskToSubmit] = useState<string | null>(null);
   const showToast = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2300); };
   const switchRole = (next: 'parent'|'child') => {
-    // Demo mode selection only: this chooses a seeded database UUID, it is not authentication.
-    setCurrentUserId(next === 'parent' ? PARENT_USER_ID : CHILD_USER_ID);
-    if (next === 'child') setSelected(CHILD_USER_ID);
+    // Demo role selector, not authentication. Keep the selected real child UUID across roles.
+    const childId = children.some(child => child.id === selected) ? selected : CHILD_USER_ID;
+    setCurrentUserId(next === 'parent' ? PARENT_USER_ID : childId);
+    if (next === 'child') setSelected(childId);
     setRole(next);
     setParentTab('family');
     setChildTab('home');
@@ -141,38 +143,49 @@ function App() {
       }
     } else if (modal?.kind === 'topup') {
       const amount = Number(data.get('amount'));
-      if (!amount || amount <= 0) { setFormError('Введи сумму больше нуля.'); return; }
+      if (!Number.isFinite(amount) || amount <= 0) { setFormError('Введи сумму больше нуля.'); return; }
       if (role === 'parent') {
         const childCardId = apiPayloads.child?.balance_block?.card_id;
         const goalTitle = modal.title.startsWith('Пополнить: ') ? modal.title.replace('Пополнить: ', '') : '';
-        const apiGoal = apiPayloads.piggybank?.goals?.find(goal => goal.title === goalTitle);
+        const apiGoal = (apiPayloads.piggybank?.goals ?? []).filter(Boolean).find(goal => goal.title === goalTitle);
         if (goalTitle && apiGoal && childCardId) {
           try {
-            await contributeToGoal(apiGoal.goal_id, { amount: amount.toFixed(2), card_id: childCardId, title: `Пополнение цели: ${goalTitle}` });
+            await contributeToGoal(apiGoal.goal_id, { amount: amount.toFixed(2), source_card_id: childCardId, title: `Пополнение цели: ${goalTitle}` }, crypto.randomUUID());
             const refreshed = await getChildPiggybank(selected);
             setApiPayloads(current => ({ ...current, piggybank: refreshed }));
-            setGoals(refreshed.goals.map(goal => ({ id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount), target: Math.max(1, toAmount(goal.target_amount)), glyph: 'gift' as const })));
+            setGoals((refreshed.goals ?? []).filter(Boolean).map(goal => ({ id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount), target: Math.max(1, toAmount(goal.target_amount)), glyph: 'gift' as const })));
             showToast('Цель пополнена через API');
           } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось пополнить цель'); return; }
-        } else if (modal.title.includes('карту') && childCardId) {
+        } else if (modal.title.toLowerCase().includes('карту') && childCardId) {
+          const parentCardId = (import.meta.env.VITE_PARENT_CARD_ID as string | undefined)?.trim() || apiPayloads.tasks?.tasks?.find(task => task?.payout_source_card?.card_id)?.payout_source_card?.card_id;
+          if (!parentCardId) { setFormError('Не удалось определить родительскую карту из данных API. Проверь настройку payout_source_card или задай VITE_PARENT_CARD_ID в окружении.'); return; }
           try {
-            await topUpCard(childCardId, { amount: amount.toFixed(2), currency: apiPayloads.child?.balance_block?.currency ?? 'BYN', title: 'Пополнение карты' });
+            await createCardTransfer(parentCardId, { destination_card_id: childCardId, amount: amount.toFixed(2), currency: apiPayloads.child?.balance_block?.currency ?? 'BYN', title: `Пополнение карты ${currentChild?.name ?? ''}`.trim() }, crypto.randomUUID());
             const refreshed = await getChild(selected);
             setApiPayloads(current => ({ ...current, child: refreshed }));
-            showToast('Карта пополнена через API');
-          } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось пополнить карту'); return; }
+            const refreshedFamily = await getFamily();
+            setFamilyResponse(refreshedFamily);
+            setChildren((refreshedFamily.children ?? []).filter(Boolean).map(child => ({ id: child.id, name: child.name, age: child.age, balance: toAmount(child?.balance_summary?.amount), limit: 20 })));
+            showToast('Перевод с родительской карты выполнен');
+          } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось перевести деньги'); return; }
         } else {
-          setFormError('Для этой операции API требует ID цели или карты. Обнови данные ребёнка и попробуй снова.');
+          setFormError('У выбранного ребёнка нет доступной карты или цели в данных API.');
           return;
         }
-      } else if (modal.title.startsWith('Пополнить: ')) {
-        const goalTitle = modal.title.replace('Пополнить: ', '');
-        setGoals(items => items.map(goal => goal.title === goalTitle ? { ...goal, saved: Math.min(goal.target, goal.saved + amount) } : goal));
-        showToast('Демо: цель пополнена локально');
       } else {
-        setFormError('Эта операция пока не подключена в режиме ребёнка.');
+        setFormError('Пополнение карты выполняет родитель: это перевод между картами, а не создание денег на счёте.');
         return;
       }
+    } else if (modal?.kind === 'proof' && taskToSubmit && currentUserId) {
+      const comment = String(data.get('comment') || '').trim();
+      const proofPhotoUrl = String(data.get('proof_photo_url') || '').trim();
+      try {
+        await submitTask(taskToSubmit, { ...(comment ? { comment } : {}), ...(proofPhotoUrl ? { proof_photo_url: proofPhotoUrl } : {}) }, currentUserId);
+        const refreshed = await getChildTasksAsChild(currentUserId);
+        setApiPayloads(current => ({ ...current, tasks: refreshed }));
+        setTaskToSubmit(null);
+        showToast('Задание отправлено родителю на проверку');
+      } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось отправить задание'); return; }
     } else if (modal?.kind === 'task') {
       const title = String(data.get('name') || '').trim();
       const description = String(data.get('description') || '').trim();
@@ -182,8 +195,19 @@ function App() {
       if (!title) { setFormError('Добавь название задания.'); return; }
       if (!currentChild?.id) { setFormError('Сначала выбери ребёнка.'); return; }
       try {
-        const payoutCardId = String(data.get('payout_source_card_id') || import.meta.env.VITE_PARENT_CARD_ID || '').trim();
-        if ((reward > 0 || penalty > 0) && !payoutCardId) { setFormError('Для денежного задания укажи ID активной карты родителя или задай VITE_PARENT_CARD_ID.'); return; }
+        let payoutCardId = String(import.meta.env.VITE_PARENT_CARD_ID || '').trim();
+        if ((reward > 0 || penalty > 0) && !payoutCardId) {
+          try {
+            const cardResult = await getUserCards(PARENT_USER_ID);
+            payoutCardId = cardResult.cards.find(card => card.status === 'ACTIVE' && card.is_primary)?.card_id
+              || cardResult.cards.find(card => card.status === 'ACTIVE')?.card_id
+              || '';
+          } catch (cardError) {
+            setFormError(cardError instanceof Error ? `Не удалось загрузить карту родителя: ${cardError.message}` : 'Не удалось загрузить карту родителя.');
+            return;
+          }
+        }
+        if ((reward > 0 || penalty > 0) && !payoutCardId) { setFormError('У родителя нет активной карты. Сначала добавь карту в банковском API.'); return; }
         const result = await createTask(currentChild.id, { title, description, reward_amount: reward.toFixed(2), penalty_amount: penalty.toFixed(2), currency: apiPayloads.child?.balance_block?.currency ?? 'BYN', ...(payoutCardId ? { payout_source_card_id: payoutCardId } : {}), ...(deadlineValue ? { deadline: new Date(deadlineValue).toISOString() } : {}) });
         const createdTask = (result as any).task ?? result;
         setApiPayloads(current => ({ ...current, tasks: { tasks: [createdTask, ...(current.tasks?.tasks ?? []).filter(task => task.task_id !== createdTask.task_id)] } }));
@@ -244,29 +268,31 @@ function App() {
   useEffect(() => {
     if (role !== 'child' || !currentUserId) return;
     let cancelled = false;
-    Promise.all([getChild(currentUserId), getChildPiggybank(currentUserId), getChildTasks(currentUserId), getChildTransactions(currentUserId, historyFrom, historyTo), getChildAnalytics(currentUserId, analyticsFrom, analyticsTo)]).then(([data, piggybank, tasks, transactions, analytics]) => {
+    Promise.all([getChildDashboard(currentUserId), getChildPiggybankAsChild(currentUserId), getChildTasksAsChild(currentUserId), getChildAnalyticsAsChild(currentUserId, analyticsFrom, analyticsTo)]).then(([data, piggybank, tasks, analytics]) => {
+      const dashboardTransactions = ((data as any)?.recent_transactions ?? []).filter(Boolean);
+      const transactions: TransactionsResponse = { requested_period: { date_from: historyFrom, date_to: historyTo }, summary: { total_income: '0.00', total_outcome: '0.00', currency: 'BYN' }, items: dashboardTransactions.map((item: any) => ({ transaction_id: item.transaction_id, title: item.title, timestamp: item.timestamp, direction: item.direction, amount: item.amount, currency: item.currency, category_code: item.category_code, related_entity: { type: 'NONE', id: null } })) };
       if (cancelled) return;
       setProfileName(data?.child_info?.name ?? 'Ребёнок');
-      setBalance(toAmount(data?.balance_block?.amount));
+      setBalance(toAmount((data?.balance_block as any)?.active_balance ?? data?.balance_block?.amount));
       setSavings(toAmount(data?.money_categories?.piggy_bank?.amount ?? piggybank?.total_saved_amount));
       if (data?.child_info?.id) setSelected(data.child_info.id);
-      const mappedGoals = (piggybank?.goals ?? []).map(goal => ({ id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount), target: Math.max(1, toAmount(goal.target_amount)), glyph: /науш|headphone/i.test(goal.title) ? 'headphones' as const : /велосип|bike/i.test(goal.title) ? 'bike' as const : /игр|game|пристав/i.test(goal.title) ? 'game' as const : /книг|конструкт|book/i.test(goal.title) ? 'book' as const : 'gift' as const }));
+      const mappedGoals = (piggybank?.goals ?? []).filter(Boolean).map(goal => ({ id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount), target: Math.max(1, toAmount(goal.target_amount)), glyph: /науш|headphone/i.test(goal.title) ? 'headphones' as const : /велосип|bike/i.test(goal.title) ? 'bike' as const : /игр|game|пристав/i.test(goal.title) ? 'game' as const : /книг|конструкт|book/i.test(goal.title) ? 'book' as const : 'gift' as const }));
       setGoals(mappedGoals);
       setApiPayloads({ child: data, piggybank, tasks, transactions, analytics });
-      setApiSources(current => ({ ...current, child: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}`), piggybank: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}/piggybank`), tasks: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}/tasks`), transactions: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}/transactions?date_from=${encodeURIComponent(historyFrom)}&date_to=${encodeURIComponent(historyTo)}`), analytics: getDataSource(`/api/v1/children/${encodeURIComponent(currentUserId)}/analytics?date_from=${encodeURIComponent(analyticsFrom)}&date_to=${encodeURIComponent(analyticsTo)}`) }));
-    });
+      setApiSources(current => ({ ...current, child: getDataSource(`/api/v1/child/${encodeURIComponent(currentUserId)}/dashboard`), piggybank: getDataSource(`/api/v1/child/${encodeURIComponent(currentUserId)}/piggybank`), tasks: getDataSource(`/api/v1/child/${encodeURIComponent(currentUserId)}/tasks`), transactions: getDataSource(`/api/v1/child/${encodeURIComponent(currentUserId)}/transactions?date_from=${encodeURIComponent(historyFrom)}&date_to=${encodeURIComponent(historyTo)}`), analytics: getDataSource(`/api/v1/child/${encodeURIComponent(currentUserId)}/analytics?date_from=${encodeURIComponent(analyticsFrom)}&date_to=${encodeURIComponent(analyticsTo)}`) }));
+    }).catch(error => { if (!cancelled) showToast(error instanceof Error ? error.message : 'Не удалось загрузить данные ребёнка'); });
     return () => { cancelled = true; };
   }, [role, currentUserId, historyFrom, historyTo, analyticsFrom, analyticsTo]);
 
   // Load family when the parent opens the Family tab. API functions use mock data only on request failure.
   useEffect(() => {
-    if (role !== 'parent' || parentTab !== 'family') return;
+    if (!['parent', 'picker'].includes(role) || (role === 'parent' && parentTab !== 'family')) return;
     let cancelled = false;
     getFamily().then(data => {
       if (cancelled) return;
       setFamilyResponse(data);
       setFamilyParents(data.parents ?? []);
-      const mapped = (data.children ?? []).map(child => ({
+      const mapped = (data.children ?? []).filter(Boolean).map(child => ({
         id: child.id,
         name: child.name,
         age: child.age,
@@ -274,9 +300,9 @@ function App() {
         limit: 20,
       }));
       setChildren(mapped);
-      setSelected(current => mapped.some(child => child.id === current) ? current : (mapped[0]?.id ?? '')); 
+      setSelected(current => mapped.some(child => child.id === current) ? current : (mapped[0]?.id ?? CHILD_USER_ID)); 
       setApiSources(current => ({ ...current, family: getDataSource(`/api/v1/family/my?family_id=${encodeURIComponent(data.family_id)}`) }));
-    });
+    }).catch(error => { if (!cancelled) showToast(error instanceof Error ? error.message : 'Не удалось загрузить семью'); });
     return () => { cancelled = true; };
   }, [role, parentTab]);
 
@@ -287,7 +313,7 @@ function App() {
     Promise.all(children.map(async child => [child.id, await getChild(child.id)] as const)).then(entries => {
       if (cancelled) return;
       setChildCards(Object.fromEntries(entries));
-    });
+    }).catch(error => { if (!cancelled) showToast(error instanceof Error ? error.message : 'Не удалось загрузить карты'); });
     return () => { cancelled = true; };
   }, [role, parentTab, children.map(child => child.id).join('|')]);
 
@@ -328,9 +354,9 @@ function App() {
         ...item,
         name: child.child_info.name,
         age: child.child_info.age,
-        balance: toAmount(child.balance_block.amount),
+        balance: toAmount(child?.balance_block?.amount),
       } : item));
-    });
+    }).catch(error => { if (!cancelled) showToast(error instanceof Error ? error.message : 'Не удалось загрузить данные ребёнка'); });
     return () => { cancelled = true; };
   }, [role, parentTab, selected, historyFrom, historyTo, analyticsFrom, analyticsTo]);
   const sortedNotifications = useMemo(() => [
@@ -340,7 +366,7 @@ function App() {
     {id:4,title:'Новая цель',copy:'Цель «Скейтборд» ждёт тебя в копилке. Каждый шаг приближает к мечте.',time:'12 октября',icon:Sparkles},
   ], []);
 
-  const rolePicker = <div className="app-stage"><div className="role-picker"><div className="role-brand">moby<em style={{fontSize:14,fontStyle:'italic',marginLeft:4}}>family</em></div><h1>Деньги —<br/>семейное дело.</h1><p>Выбери режим демо-приложения. Можно переключаться между родителем и ребёнком в любой момент.</p><button className="role-card" data-testid="role-parent" onClick={()=>switchRole('parent')}><span className="role-icon"><UsersRound size={26}/></span><span><b>Я родитель</b><small>Семья, дети и управление деньгами</small></span><ChevronRight className="role-arrow"/></button><button className="role-card" data-testid="role-child" onClick={()=>switchRole('child')}><span className="role-icon"><UserRound size={26}/></span><span><b>Я ребёнок</b><small>Главная, копилка и профиль Никиты</small></span><ChevronRight className="role-arrow"/></button><div className="role-foot">Демо-режим · выбраны тестовые ID из базы, входа в аккаунт нет</div></div></div>;
+  const rolePicker = <div className="app-stage"><div className="role-picker"><div className="role-brand">moby<em style={{fontSize:14,fontStyle:'italic',marginLeft:4}}>family</em></div><h1>Деньги —<br/>семейное дело.</h1><p>Выбери режим демо-приложения. Можно переключаться между родителем и ребёнком в любой момент.</p><button className="role-card" data-testid="role-parent" onClick={()=>switchRole('parent')}><span className="role-icon"><UsersRound size={26}/></span><span><b>Я родитель</b><small>Семья, дети и управление деньгами</small></span><ChevronRight className="role-arrow"/></button>{children.length > 0 && <div style={{margin:'14px 0 8px',textAlign:'left'}}><label htmlFor="select-child" style={{display:'block',fontSize:12,color:'#66758b',marginBottom:6}}>Режим ребёнка</label><select id="select-child" className="form-control" data-testid="select-child" value={children.some(child=>child.id===selected)?selected:(children[0]?.id ?? CHILD_USER_ID)} onChange={event=>setSelected(event.target.value)}>{children.map(child=><option key={child.id} value={child.id}>{child.name}</option>)}</select></div>}<button className="role-card" data-testid="role-child" onClick={()=>switchRole('child')}><span className="role-icon"><UserRound size={26}/></span><span><b>Я ребёнок</b><small>Главная, копилка и профиль выбранного ребёнка</small></span><ChevronRight className="role-arrow"/></button><div className="role-foot">Демо-режим · выбраны тестовые ID из базы, входа в аккаунт нет</div></div></div>;
 
   const childHeader = (withGreeting = true) => <><div className="brandbar"><Brand/><IconButton label="Уведомления" testId="open-notifications" onClick={()=>navigateChild('notifications')}><Bell size={21}/>{unread.length>0&&<i style={{width:7,height:7,borderRadius:50,background:'#2169ff',position:'absolute',transform:'translate(8px,-8px)',border:'1.5px solid white'}}/>}</IconButton></div>{withGreeting&&<div className="greeting"><h1>Привет, {profileName}!</h1><button className="avatar-small" data-testid="open-profile" onClick={()=>navigateChild('profile')}>{profileName[0]}</button></div>}</>;
 
@@ -349,7 +375,7 @@ function App() {
     <button className="savings-teaser" onClick={()=>navigateChild('savings')} data-testid="open-savings"><div className="teaser-head">Пассивный баланс<ChevronRight size={16} color="#2169ff"/></div><div className="teaser-amount">{toAmount(savings).toFixed(2)} {apiPayloads.piggybank?.currency ?? apiPayloads.child?.money_categories?.piggy_bank?.currency ?? 'BYN'}</div><div className="treasure-art"><img className="treasure-img" src="/treasure-chest.png" alt="Сундук с накоплениями"/></div><div className="teaser-link"><span>В копилку</span><ArrowUpRight size={16}/></div></button>
   </div>
   <section className="section"><div className="section-title"><h2>Твои цели</h2><button className="text-action" data-testid="link-goals" onClick={()=>navigateChild('savings')}>Копилка <ChevronRight size={14} style={{verticalAlign:'middle'}}/></button></div><div className="goal-strip">{goals.map(goal=><GoalCard key={goal.id} goal={goal} onClick={()=>navigateChild('savings')}/>)}</div><div style={{display:'flex',justifyContent:'center',gap:4,marginTop:9}}><i style={{width:14,height:4,borderRadius:5,background:'#2169ff'}}/><i style={{width:4,height:4,borderRadius:5,background:'#d8e2f3'}}/><i style={{width:4,height:4,borderRadius:5,background:'#d8e2f3'}}/></div></section>
-  <section className="section"><div className="section-title"><h2>Задания от родителей</h2><button className="text-action" data-testid="show-all-tasks" onClick={()=>showToast(`Заданий: ${apiPayloads.tasks?.tasks?.length ?? 0}`)}>Все <ChevronRight size={14} style={{verticalAlign:'middle'}}/></button></div><div className="task-strip">{(apiPayloads.tasks?.tasks ?? []).slice(0,3).map(task=><button className="task-card" key={task.task_id} data-testid={`task-${task.task_id}`} onClick={()=>showToast(`Статус задания: ${({IN_PROGRESS:'В процессе',WAITING_REVIEW:'Ожидает проверки',REJECTED_NEED_FIX:'Нужно исправить',COMPLETED:'Выполнено',CANCELLED:'Отменено'} as const)[task.status]}`)}><div className="task-reward"><span>+{toAmount(task.reward_amount).toFixed(2).replace('.', ',')} {task.currency}</span><Award size={18}/></div><div className="task-copy">{task.title}</div><div className="task-progress">{({IN_PROGRESS:'В процессе',WAITING_REVIEW:'Ожидает проверки',REJECTED_NEED_FIX:'Нужно исправить',COMPLETED:'Выполнено',CANCELLED:'Отменено'} as const)[task.status]}</div></button>)}{!(apiPayloads.tasks?.tasks?.length)&&<div className="empty-note">Новых заданий нет</div>}</div></section>
+  <section className="section"><div className="section-title"><h2>Задания от родителей</h2><button className="text-action" data-testid="show-all-tasks" onClick={()=>showToast(`Заданий: ${apiPayloads.tasks?.tasks?.length ?? 0}`)}>Все <ChevronRight size={14} style={{verticalAlign:'middle'}}/></button></div><div className="task-strip">{(apiPayloads.tasks?.tasks ?? []).slice(0,3).map(task=><button className="task-card" key={task.task_id} data-testid={`task-${task.task_id}`} onClick={()=>{if(['IN_PROGRESS','REJECTED_NEED_FIX'].includes(task.status)){setTaskToSubmit(task.task_id);openModal('proof',`Отправить на проверку: ${task.title}`);}else{showToast(`Статус задания: ${({IN_PROGRESS:'В процессе',WAITING_REVIEW:'Ожидает проверки',REJECTED_NEED_FIX:'Нужно исправить',COMPLETED:'Выполнено',CANCELLED:'Отменено'} as const)[task.status]}`);}}}><div className="task-reward"><span>+{toAmount(task.reward_amount).toFixed(2).replace('.', ',')} {task.currency}</span><Award size={18}/></div><div className="task-copy">{task.title}</div><div className="task-progress">{({IN_PROGRESS:'В процессе',WAITING_REVIEW:'Ожидает проверки',REJECTED_NEED_FIX:'Нужно исправить',COMPLETED:'Выполнено',CANCELLED:'Отменено'} as const)[task.status]}</div></button>)}{!(apiPayloads.tasks?.tasks?.length)&&<div className="empty-note">Новых заданий нет</div>}</div></section>
   <section className="section"><div className="section-title"><h2>Твои последние операции</h2><button className="text-action" data-testid="all-transactions" onClick={()=>{setRole('parent');setSelected(currentUserId ?? CHILD_USER_ID);setParentTab('details');}}>Все <ChevronRight size={14} style={{verticalAlign:'middle'}}/></button></div><div className="transactions">{(apiPayloads.transactions?.items ?? []).slice(0,3).map((item,index)=><div className="transaction" key={item.transaction_id} data-testid={`transaction-${index}`}><span className="transaction-icon"><History size={19}/></span><span className="transaction-copy"><b>{item.title}</b><small>{new Date(item.timestamp).toLocaleDateString('ru-RU')} · {item.category_code}</small></span><span className="transaction-amount">{item.direction==='INCOME'?'+':'−'}{toAmount(item.amount).toFixed(2).replace('.', ',')} {item.currency}</span></div>)}{!(apiPayloads.transactions?.items?.length)&&<div className="empty-note">Операций пока нет</div>}</div></section></div><BottomNav active="home" onSelect={navigateChild}/></>;
 
   const childSavings = <><div className="phone-content"><StatusBar/><div className="brandbar"><Brand dark/></div><div className="page-head"><h1>Копилка</h1></div><div className="savings-hero"><div className="big-treasure"><img className="treasure-large" src="/treasure-chest.png" alt="Сундук с накоплениями"/></div><div className="balance-label">Пассивный баланс</div><div className="balance-big">{savings.toFixed(2)} BYN</div><button className="primary-btn" data-testid="create-goal" onClick={()=>openModal('goal','Создать цель')}><Plus size={19}/>Создать цель</button></div><section className="savings-list"><div className="section-title"><h2>Твои цели</h2><span className="active-pill">{activeGoals} активных</span></div>{goals.map(goal=>{const pct=Math.round(goal.saved/goal.target*100);return <div className="saving-goal" key={goal.id} data-testid={`savings-goal-${goal.id}`} onClick={()=>openModal('topup',`Пополнить: ${goal.title}`)}><div className="saving-goal-title">{goal.title}<ChevronRight size={15} color="#416bff"/></div><div className="saving-goal-meta"><span>{goal.saved} из {goal.target} BYN</span><b style={{color:'#416bff'}}>{pct}%</b></div><div className="progress"><i style={{width:`${pct}%`}}/></div><div className="saving-goal-foot">Осталось {goal.target-goal.saved} BYN</div></div>})}</section></div><BottomNav active="savings" onSelect={navigateChild}/></>;
@@ -408,7 +434,7 @@ function App() {
     ? childTab === 'home' ? childHome : childTab === 'savings' ? childSavings : childTab === 'profile' ? childProfile : notificationsPage
     : parentTab === 'family' ? parentFamily : parentTab === 'details' ? parentDetails : parentTab === 'goals' ? parentGoalsPage : parentTab === 'tasks' ? parentTasksPage : parentTab === 'analytics' ? parentAnalyticsPage : parentTab === 'home' ? <>{parentHome}<BottomNav active="home" mode="parent" onSelect={navigateParent}/></> : parentTab === 'chat' ? <>{parentChat}<BottomNav active="chat" mode="parent" onSelect={navigateParent}/></> : otherParentTab;
   if (role !== 'picker') {
-    view = <div className="app-stage"><main className={`phone ${role==='parent'?'parent':''}`}>{view}{modal&&<div className="overlay" role="presentation"><form className="dialog" onSubmit={submitModal}><div className="dialog-head"><div><h2>{modal.title}</h2>{modal.description&&<small style={{color:'#8494ad'}}>{modal.description}</small>}</div><button className="close-btn" type="button" aria-label="Закрыть" data-testid="close-modal" onClick={()=>setModal(null)}><X size={18}/></button></div>{modal.title==='Отправить на доработку'?<><label htmlFor="rejection-comment">Комментарий ребёнку</label><textarea className="form-control" id="rejection-comment" name="rejection_comment" rows={3} placeholder="Что нужно исправить?" data-testid="input-rejection-comment"/></>:modal.kind==='goal'?<><label htmlFor="goal-name">Название цели</label><input className="form-control" id="goal-name" name="name" placeholder="Например, новые наушники" data-testid="input-goal-name"/><label htmlFor="goal-target">Сколько нужно накопить</label><input className="form-control" id="goal-target" name="target" type="number" min="1" step="1" placeholder="100 BYN" data-testid="input-goal-target"/></>:modal.kind==='topup'?<><label htmlFor="amount">Сумма, BYN</label><input className="form-control" id="amount" name="amount" type="number" min="0.1" step="0.1" placeholder="Например, 10" data-testid="input-amount"/></>:modal.kind==='member'?<><label htmlFor="member-name">Имя ребёнка</label><input className="form-control" id="member-name" name="name" placeholder="Имя" data-testid="input-member-name"/><label htmlFor="member-age">Возраст</label><input className="form-control" id="member-age" name="age" type="number" min="1" max="18" placeholder="Возраст" data-testid="input-member-age"/><label htmlFor="member-birth-date">Дата рождения (необязательно)</label><input className="form-control" id="member-birth-date" name="birth_date" type="date" data-testid="input-member-birth-date"/></>:modal.kind==='task'?<><label htmlFor="task-name">Название задания</label><input className="form-control" id="task-name" name="name" placeholder="Например, убрать комнату" data-testid="input-task-name"/><label htmlFor="task-description">Описание</label><textarea className="form-control" id="task-description" name="description" rows={2} placeholder="Что нужно сделать?" data-testid="input-task-description"/><label htmlFor="task-reward">Награда, BYN</label><input className="form-control" id="task-reward" name="reward" type="number" min="0" step="0.01" defaultValue="10" placeholder="10" data-testid="input-task-reward"/><label htmlFor="task-penalty">Штраф, BYN (необязательно)</label><input className="form-control" id="task-penalty" name="penalty" type="number" min="0" step="0.01" defaultValue="0" data-testid="input-task-penalty"/><label htmlFor="task-payout-card">ID карты родителя для выплаты (нужен при награде/штрафе)</label><input className="form-control" id="task-payout-card" name="payout_source_card_id" placeholder="UUID карты родителя" data-testid="input-task-payout-card" defaultValue={import.meta.env.VITE_PARENT_CARD_ID ?? ''}/><label htmlFor="task-deadline">Срок (необязательно)</label><input className="form-control" id="task-deadline" name="deadline" type="datetime-local" data-testid="input-task-deadline"/></>:modal.kind==='edit'?<><label htmlFor="profile-name">Имя профиля</label><input className="form-control" id="profile-name" name="name" defaultValue={profileName} data-testid="input-profile-name"/></>:modal.title.includes('карманные')?<><label htmlFor="pocket-amount">Сумма, BYN</label><input className="form-control" id="pocket-amount" name="pocket" type="number" min="1" defaultValue="20" data-testid="input-pocket-amount"/></>:modal.title.includes('Оформить карту')?<><label htmlFor="card-name">Имя на карте</label><input className="form-control" id="card-name" name="cardname" placeholder="Имя Фамилия" data-testid="input-card-name"/><label htmlFor="card-type">Тип карты</label><select className="form-control" id="card-type" name="cardtype" data-testid="select-card-type"><option>Детская карта</option><option>Семейная карта</option></select></>:<div style={{background:'#f5f8fd',borderRadius:13,padding:14,color:'#667e99',fontSize:13}}>{modal.description||'Настройка доступна в демо-режиме. Изменения сохраняются локально.'}</div>}{formError&&<div className="form-error" data-testid="form-error">{formError}</div>}<div className="dialog-actions"><button type="button" className="secondary-btn" data-testid="cancel-modal" onClick={()=>setModal(null)}>Отмена</button><button className="primary-btn" type="submit" data-testid="submit-modal">Сохранить</button></div></form></div>}{toast&&<div className="toast" role="status" data-testid="toast-message">{toast}</div>}</main></div>;
+    view = <div className="app-stage"><main className={`phone ${role==='parent'?'parent':''}`}>{view}{modal&&<div className="overlay" role="presentation"><form className="dialog" onSubmit={submitModal}><div className="dialog-head"><div><h2>{modal.title}</h2>{modal.description&&<small style={{color:'#8494ad'}}>{modal.description}</small>}</div><button className="close-btn" type="button" aria-label="Закрыть" data-testid="close-modal" onClick={()=>setModal(null)}><X size={18}/></button></div>{modal.title==='Отправить на доработку'?<><label htmlFor="rejection-comment">Комментарий ребёнку</label><textarea className="form-control" id="rejection-comment" name="rejection_comment" rows={3} placeholder="Что нужно исправить?" data-testid="input-rejection-comment"/></>:modal.kind==='goal'?<><label htmlFor="goal-name">Название цели</label><input className="form-control" id="goal-name" name="name" placeholder="Например, новые наушники" data-testid="input-goal-name"/><label htmlFor="goal-target">Сколько нужно накопить</label><input className="form-control" id="goal-target" name="target" type="number" min="1" step="1" placeholder="100 BYN" data-testid="input-goal-target"/></>:modal.kind==='topup'?<><label htmlFor="amount">Сумма, BYN</label><input className="form-control" id="amount" name="amount" type="number" min="0.1" step="0.1" placeholder="Например, 10" data-testid="input-amount"/></>:modal.kind==='proof'?<><label htmlFor="proof-comment">Комментарий родителю</label><textarea className="form-control" id="proof-comment" name="comment" rows={3} placeholder="Что ты сделал?" data-testid="input-proof-comment"/><label htmlFor="proof-photo-url">Ссылка на фото (необязательно)</label><input className="form-control" id="proof-photo-url" name="proof_photo_url" type="url" placeholder="https://..." data-testid="input-proof-photo-url"/></>:modal.kind==='member'?<><label htmlFor="member-name">Имя ребёнка</label><input className="form-control" id="member-name" name="name" placeholder="Имя" data-testid="input-member-name"/><label htmlFor="member-age">Возраст</label><input className="form-control" id="member-age" name="age" type="number" min="1" max="18" placeholder="Возраст" data-testid="input-member-age"/><label htmlFor="member-birth-date">Дата рождения (необязательно)</label><input className="form-control" id="member-birth-date" name="birth_date" type="date" data-testid="input-member-birth-date"/></>:modal.kind==='task'?<><label htmlFor="task-name">Название задания</label><input className="form-control" id="task-name" name="name" placeholder="Например, убрать комнату" data-testid="input-task-name"/><label htmlFor="task-description">Описание</label><textarea className="form-control" id="task-description" name="description" rows={2} placeholder="Что нужно сделать?" data-testid="input-task-description"/><label htmlFor="task-reward">Награда, BYN</label><input className="form-control" id="task-reward" name="reward" type="number" min="0" step="0.01" defaultValue="10" placeholder="10" data-testid="input-task-reward"/><label htmlFor="task-penalty">Штраф, BYN (необязательно)</label><input className="form-control" id="task-penalty" name="penalty" type="number" min="0" step="0.01" defaultValue="0" data-testid="input-task-penalty"/><small style={{color:'#8494ad'}}>Активная карта родителя выберется автоматически.</small><label htmlFor="task-deadline">Срок (необязательно)</label><input className="form-control" id="task-deadline" name="deadline" type="datetime-local" data-testid="input-task-deadline"/></>:modal.kind==='edit'?<><label htmlFor="profile-name">Имя профиля</label><input className="form-control" id="profile-name" name="name" defaultValue={profileName} data-testid="input-profile-name"/></>:modal.title.includes('карманные')?<><label htmlFor="pocket-amount">Сумма, BYN</label><input className="form-control" id="pocket-amount" name="pocket" type="number" min="1" defaultValue="20" data-testid="input-pocket-amount"/></>:modal.title.includes('Оформить карту')?<><label htmlFor="card-name">Имя на карте</label><input className="form-control" id="card-name" name="cardname" placeholder="Имя Фамилия" data-testid="input-card-name"/><label htmlFor="card-type">Тип карты</label><select className="form-control" id="card-type" name="cardtype" data-testid="select-card-type"><option>Детская карта</option><option>Семейная карта</option></select></>:<div style={{background:'#f5f8fd',borderRadius:13,padding:14,color:'#667e99',fontSize:13}}>{modal.description||'Настройка доступна в демо-режиме. Изменения сохраняются локально.'}</div>}{formError&&<div className="form-error" data-testid="form-error">{formError}</div>}<div className="dialog-actions"><button type="button" className="secondary-btn" data-testid="cancel-modal" onClick={()=>setModal(null)}>Отмена</button><button className="primary-btn" type="submit" data-testid="submit-modal">Сохранить</button></div></form></div>}{toast&&<div className="toast" role="status" data-testid="toast-message">{toast}</div>}</main></div>;
   }
   return <>{view}</>;
 }
