@@ -117,7 +117,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .page-head {padding:8px 24px 12px}
 .page-head h1 {margin:0;font-size:28px;line-height:1.2;font-weight:800;color:#304b70;letter-spacing:-.5px}
 .savings-hero {padding:0 24px 20px;text-align:center}
-.big-treasure {height:186px;display:grid;place-items:center;color:#416bff}
+.big-treasure {height:186px;display:grid;place-items:center;position:relative;overflow:visible;color:#416bff}
 .big-treasure svg {filter:drop-shadow(0 12px 14px #496dbb30)}
 .balance-label {font-size:13px;color:#8494ad;margin-top:1px}
 .balance-big {font-size:29px;font-weight:800;color:#304b70;margin:2px 0 17px}
@@ -1415,4 +1415,519 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   }
   .learning-screen .map-branch-two { height: 54px; margin-top: -10px; }
   .learning-screen .map-branch-three { height: 58px; margin-top: -10px; }
+}
+
+
+/* Figma reference alignment: compact, airy Moby Family learning map */
+.learning-screen.phone-content {
+  padding: 16px 20px 18px !important;
+  background: #f7f7ff !important;
+  color: #506789;
+}
+.learning-screen .brandbar {
+  min-height: 38px;
+  margin-bottom: 14px !important;
+}
+.learning-screen .learning-title {
+  font-size: 26px !important;
+  line-height: 1.12 !important;
+  letter-spacing: -.55px !important;
+  margin: 12px 0 10px !important;
+  font-weight: 800 !important;
+}
+.learning-screen .learning-subtitle {
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+  margin: 0 0 14px !important;
+  color: #8a9ab7 !important;
+}
+.learning-screen .map-eyebrow {
+  font-size: 9px !important;
+  line-height: 1.3 !important;
+  letter-spacing: .2px !important;
+  margin-bottom: 8px !important;
+}
+.learning-screen .learning-map {
+  padding: 0 0 8px !important;
+}
+.learning-screen .map-side-icon {
+  width: 54px !important;
+  height: 54px !important;
+  border-radius: 19px !important;
+}
+.learning-screen .map-side-icon svg {
+  width: 24px;
+  height: 24px;
+}
+.learning-screen .map-side-pig { top: 74px !important; right: 0 !important; }
+.learning-screen .map-side-bank { top: 220px !important; left: 0 !important; }
+.learning-screen .map-node { gap: 4px !important; }
+.learning-screen .map-node b {
+  width: 46px !important;
+  height: 46px !important;
+  border-radius: 15px !important;
+  border: 2px solid #e0e6f5 !important;
+  font-size: 20px !important;
+  color: #879abb !important;
+  background: #fff !important;
+}
+.learning-screen .map-node strong {
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+  font-weight: 700 !important;
+  color: #627797 !important;
+}
+.learning-screen .map-start {
+  width: 112px !important;
+  min-height: 112px !important;
+  padding: 5px 8px 7px !important;
+  gap: 4px !important;
+  margin: 0 auto !important;
+  background: #ededff !important;
+}
+.learning-screen .map-start small {
+  font-size: 8px !important;
+}
+.learning-screen .map-start b {
+  width: 44px !important;
+  height: 44px !important;
+  border-width: 4px !important;
+  border-radius: 15px !important;
+  font-size: 21px !important;
+}
+.learning-screen .map-start strong {
+  font-size: 9px !important;
+  line-height: 1.12 !important;
+}
+.learning-screen .map-node-state {
+  font-size: 8px !important;
+}
+.learning-screen .map-down,
+.learning-screen .map-down svg {
+  height: 27px !important;
+}
+.learning-screen .map-down svg { width: 30px !important; }
+.learning-screen .map-connector svg path {
+  stroke-width: 2.5 !important;
+}
+.learning-screen .map-branch-two {
+  height: 37px !important;
+  margin: 0 auto -2px !important;
+}
+.learning-screen .map-branch-three {
+  height: 39px !important;
+  margin: 0 auto -2px !important;
+}
+.learning-screen .map-pair { gap: 8px !important; }
+.learning-screen .map-pair .map-node b {
+  width: 46px !important;
+  height: 46px !important;
+}
+.learning-screen .map-triple { gap: 2px !important; }
+.learning-screen .map-triple .map-node b {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 14px !important;
+  font-size: 19px !important;
+}
+.learning-screen .map-triple .map-node strong {
+  min-height: 23px !important;
+  font-size: 8px !important;
+  overflow-wrap: normal !important;
+}
+.learning-screen .map-lock { width: 11px !important; height: 11px !important; }
+.learning-screen .start-lesson-card {
+  margin-top: 8px !important;
+  border-radius: 16px !important;
+  padding: 12px !important;
+}
+.learning-screen .start-lesson-heading { margin-bottom: 10px !important; }
+.learning-screen .start-lesson-heading h2 { font-size: 14px !important; }
+.learning-screen .start-lesson-card p { font-size: 10px !important; }
+.learning-screen .primary-btn {
+  min-height: 42px !important;
+  border-radius: 12px !important;
+  font-size: 12px !important;
+}
+@media (max-width: 390px) {
+  .learning-screen.phone-content { padding: 14px 18px 16px !important; }
+  .learning-screen .learning-title { font-size: 25px !important; }
+  .learning-screen .map-side-icon { width: 46px !important; height: 46px !important; }
+  .learning-screen .map-pair .map-node b { width: 42px !important; height: 42px !important; }
+  .learning-screen .map-triple .map-node b { width: 38px !important; height: 38px !important; }
+}
+
+
+/* Consistent Lucide icon alignment across parent and child screens */
+button > svg,
+a > svg,
+.icon-btn svg,
+.nav-icon svg,
+.setting-icon svg,
+.transaction-icon svg,
+.role-icon svg,
+.notification-icon svg,
+.back-role svg,
+.back-pill svg,
+.text-action svg {
+  display: block;
+  flex: 0 0 auto;
+  vertical-align: middle;
+}
+button,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+.icon-btn,
+.nav-item,
+.setting-row,
+.role-card,
+.back-role,
+.back-pill,
+.text-action {
+  align-items: center;
+}
+.nav-item { justify-content: center; }
+.nav-icon { flex: 0 0 auto; }
+.setting-chevron { flex: 0 0 auto; width: 18px; height: 18px; }
+.transaction-icon svg,
+.notification-icon svg { width: 19px; height: 19px; }
+
+
+/* Child tasks tab: compact mobile layout based on the supplied reference */
+.child-tasks-screen { background:#f4f7fd; padding-bottom:18px; }
+.child-tasks-screen .learning-title { font-size:27px; line-height:1.2; margin:20px 0 8px; color:#29456f; }
+.child-tasks-screen .learning-subtitle { margin:0 0 24px; font-size:14px; line-height:1.45; color:#8495b1; }
+.tasks-reward-banner { display:flex; align-items:center; gap:13px; padding:15px; margin:0 0 25px; border-radius:20px; background:#e9eeff; color:#4c60ff; }
+.tasks-reward-banner>span { width:42px; height:42px; border-radius:13px; display:grid; place-items:center; background:white; flex:none; }
+.tasks-reward-banner>div { display:flex; flex-direction:column; gap:5px; min-width:0; }
+.tasks-reward-banner b { font-size:16px; line-height:1.2; }
+.tasks-reward-banner small { font-size:12px; color:#53698e; }
+.tasks-status-heading { display:flex; align-items:center; justify-content:space-between; margin:0 0 11px; font-size:13px; color:#29456f; }
+.tasks-status-heading svg { color:#8797b1; }
+.tasks-status-filters { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:24px; }
+.tasks-status-filters button { min-width:0; height:46px; border:1px solid #e0e8f5; border-radius:14px; background:white; display:flex; align-items:center; gap:8px; padding:0 11px; color:#40597f; font-size:12px; text-align:left; }
+.tasks-status-filters button:first-child { grid-column:1 / -1; justify-content:space-between; height:46px; }
+.tasks-status-filters button.selected { background:#4b5fff; border-color:#4b5fff; color:white; }
+.tasks-status-filters button span { margin-left:auto; color:#8496b4; }
+.tasks-status-filters button.selected span { color:white; }
+.task-filter-dot { width:6px; height:6px; border-radius:50%; background:#5c69ee; flex:none; }
+.task-filter-dot.created { background:#4e62ff; }
+.task-filter-dot.in_progress { background:#6571d9; }
+.task-filter-dot.waiting_review { background:#b7791f; }
+.task-filter-dot.completed { background:#329779; }
+.tasks-list-heading { display:flex; justify-content:space-between; align-items:center; margin:0 0 15px; color:#29456f; font-size:18px; }
+.tasks-list-heading small { color:#8495b1; font-size:12px; font-weight:400; }
+.child-tasks-list { display:flex; flex-direction:column; gap:13px; }
+.child-task-detail { padding:18px; border:0; border-radius:21px; background:white; box-shadow:none; }
+.child-task-detail:nth-child(4n+1) { background:#e9f0ff; }
+.child-task-detail:nth-child(4n+2) { background:#efedff; }
+.child-task-detail:nth-child(4n+3) { background:#fff; }
+.child-task-detail:nth-child(4n) { background:#fff; }
+.child-task-detail .task-card-meta { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:16px; }
+.child-task-detail .task-reward-label { color:#4c60ff; font-size:16px; }
+.child-task-detail .task-status-pill { display:inline-flex; align-items:center; gap:5px; border-radius:20px; padding:5px 9px; white-space:nowrap; font-size:11px; }
+.child-task-detail .task-status-pill i { width:5px; height:5px; border-radius:50%; }
+.child-task-detail h3 { margin:0 0 7px; color:#29456f; font-size:18px; line-height:1.3; font-weight:500; }
+.child-task-detail>p { margin:0 0 14px; color:#40597f; font-size:13px; line-height:1.55; }
+.task-card-bottom { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 15px; color:#8495b1; font-size:11px; }
+.task-card-bottom time { display:flex; align-items:center; gap:5px; }
+.task-card-bottom small { font-size:11px; }
+.child-task-detail .child-task-submit { width:100%; min-height:49px; border-radius:13px; display:flex; justify-content:center; align-items:center; gap:8px; margin-top:0; font-size:13px; }
+.task-status-note { display:flex; align-items:center; gap:10px; padding:13px; border-radius:14px; margin-top:2px; font-size:12px; }
+.task-status-note span { display:flex; flex-direction:column; gap:4px; }
+.task-status-note small { font-size:11px; }
+.task-status-note.waiting { color:#a96b13; background:#fff4df; }
+.task-status-note.approved { color:#288b70; background:#e8f7f0; }
+.tasks-footer-note { text-align:center; color:#8495b1; font-size:12px; line-height:1.55; padding:14px 0 4px; }
+.child-tasks-screen .tasks-empty { background:white; border-radius:18px; padding:26px 18px; }
+@media (max-width:380px) {
+ .child-task-detail { padding:15px; }
+ .child-task-detail h3 { font-size:17px; }
+ .tasks-status-filters button { padding:0 9px; gap:6px; }
+}
+
+
+/* Figma: Savings / "Копилка — Твои цели" */
+.phone .phone-content.savings-page {
+  background: #F8F7FF;
+  color: #4C6287;
+  padding-bottom: 12px;
+}
+.phone-content.savings-page > .brandbar {
+  background: #F8F7FF;
+  box-shadow: none;
+  padding: 12px 16px 0;
+  height: 44px;
+  min-height: 44px;
+}
+.savings-page .brand { color: #4C6287; font-size: 24px; font-weight: 800; letter-spacing: -.8px; }
+.savings-page .brand em { color: #6057F5; font-size: 8px !important; font-weight: 400; letter-spacing: 0; }
+.savings-page .savings-hero {
+  position: relative;
+  box-sizing: border-box;
+  padding: 12px 16px 24px;
+  min-height: 520px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  overflow: visible;
+}
+.savings-page .savings-page-title {
+  margin: 0;
+  text-align: left;
+  color: #303846;
+  font-size: 34px;
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+.savings-page .big-treasure {
+  position: relative;
+  height: 218px;
+  flex: 0 0 218px;
+  display: grid;
+  place-items: center;
+  margin: 0 -6px;
+  overflow: visible;
+}
+.savings-page .big-treasure svg,
+.savings-page .treasure-large {
+  width: 204px;
+  height: 175.44px;
+  object-fit: contain;
+  filter: none;
+  z-index: 2;
+}
+.savings-page .savings-coin {
+  position: absolute;
+  z-index: 3;
+  width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #F7CD62;
+  border: 1px solid #B7872D;
+  color: #B7872D;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  transform: rotate(-12deg);
+}
+.savings-page .coin-a { left: 20%; top: 20%; }
+.savings-page .coin-b { right: 12%; top: 10%; }
+.savings-page .coin-c { left: 12%; top: 57%; }
+.savings-page .coin-d { right: 8%; top: 64%; }
+.savings-page .coin-e { right: 27%; top: 86%; width: 14px; height: 14px; font-size: 9px; }
+.savings-page .balance-label {
+  margin: 0;
+  color: #AFBAD1;
+  font-size: 14px;
+  line-height: 19px;
+  font-weight: 400;
+}
+.savings-page .balance-big {
+  margin: -5px 0 4px;
+  color: #4C6287;
+  font-size: 34px;
+  line-height: 1.35;
+  font-weight: 700;
+  letter-spacing: -.6px;
+}
+.savings-page .savings-create-btn {
+  width: 100%;
+  min-height: 56px;
+  margin: 4px 0 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border-radius: 10px;
+  background: #6057F5;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+}
+.savings-page .savings-break-btn {
+  width: 100%;
+  min-height: 45px;
+  margin: 0;
+  border: 1.4px solid #6057F5;
+  border-radius: 10px;
+  background: #fff;
+  color: #6057F5;
+  font-size: 16px;
+  font-weight: 700;
+}
+.savings-page .savings-goals-section {
+  box-sizing: border-box;
+  padding: 12px 16px 24px;
+  border-top: 1px solid #DEE0EE;
+}
+.savings-page .savings-goals-section .section-title {
+  min-height: 28px;
+  margin: 0 0 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.savings-page .savings-goals-section .section-title h2,
+.savings-page .closed-goals-title {
+  margin: 0;
+  color: #4C6287;
+  font-size: 21px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+.savings-page .active-pill {
+  padding: 5px 12px;
+  border-radius: 14px;
+  background: #F0EDFF;
+  color: #6057F5;
+  font-size: 11px;
+  line-height: 15px;
+  white-space: nowrap;
+}
+.savings-page .saving-goal {
+  box-sizing: border-box;
+  min-height: 160px;
+  padding: 15px;
+  margin: 0 0 14px;
+  border: 0;
+  border-radius: 22px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  box-shadow: none;
+}
+.savings-page .saving-goal-title {
+  width: 100%;
+  min-height: 23px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #4C6287;
+  font-size: 17px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+.savings-page .saving-goal-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  color: #A4B1C7;
+  font-size: 12px;
+  line-height: 18px;
+}
+.savings-page .saving-goal-meta b { color: #6057F5 !important; font-size: 13px; font-weight: 600; }
+.savings-page .saving-goal .progress { height: 6px; margin: 0; border-radius: 10px; background: #EDEBFF; }
+.savings-page .saving-goal .progress i { background: #6057F5; border-radius: 10px; }
+.savings-page .saving-goal-foot { color: #6057F5; font-size: 13px; line-height: 18px; font-weight: 600; }
+.savings-page .savings-goal-actions { display: flex; gap: 8px; margin-top: 5px; }
+.savings-page .savings-goal-actions button {
+  flex: 1;
+  height: 37px;
+  border: 1px solid #6057F5;
+  border-radius: 10px;
+  background: #fff;
+  color: #6057F5;
+  font-size: 14px;
+  font-weight: 500;
+}
+.savings-page .savings-goal-actions button:first-child { background: #6057F5; color: #fff; }
+.savings-page .savings-empty-goal { align-items: flex-start; color: #4C6287; }
+.savings-page .savings-empty-goal span { color: #8796B0; font-size: 13px; line-height: 1.45; }
+.savings-page .savings-empty-goal button { margin-top: 4px; padding: 10px 14px; border: 0; border-radius: 10px; background: #6057F5; color: #fff; font-weight: 600; }
+.savings-page .closed-goals { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+.savings-page .closed-goals-title { display: flex; justify-content: space-between; align-items: center; }
+.savings-page .closed-goals-empty {
+  min-height: 73px;
+  padding: 15px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  border-radius: 18px;
+  background: #fff;
+  color: #A4B1C7;
+  font-size: 12px;
+}
+.savings-page .closed-goals-empty svg { color: #16A6A0; flex-shrink: 0; }
+.phone:has(.savings-page) .bottom-nav { background: #fff; border-top: 1px solid #E0E8F8; }
+@media (max-width: 420px) {
+  .savings-page .savings-hero { min-height: 520px; }
+  .savings-page .savings-page-title { font-size: 34px; }
+  .savings-page .big-treasure { height: 218px; flex-basis: 218px; }
+}
+
+
+
+
+/* Real device layout: scale spacing and card proportions to narrow phone widths. */
+@media (max-width: 600px) {
+  .app-stage {
+    min-height: 100svh;
+    height: 100svh;
+    padding: 0;
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+  .phone {
+    width: 100vw;
+    height: 100svh;
+    min-height: 0;
+    max-height: none;
+    flex: 1 1 auto;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: hidden;
+  }
+  .phone-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .status { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  .brandbar { padding-left: clamp(14px, 4.5vw, 20px); padding-right: clamp(14px, 4.5vw, 20px); }
+  .greeting { padding-left: clamp(14px, 4.5vw, 20px); padding-right: clamp(14px, 4.5vw, 20px); }
+  .greeting h1 { font-size: clamp(20px, 6vw, 24px); overflow-wrap: anywhere; }
+  .section { padding-left: clamp(14px, 4.5vw, 20px); padding-right: clamp(14px, 4.5vw, 20px); }
+  .balances { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(8px, 2.5vw, 12px); padding-left: clamp(14px, 4.5vw, 20px); padding-right: clamp(14px, 4.5vw, 20px); }
+  .bank-card, .savings-teaser { min-width: 0; height: clamp(164px, 48vw, 194px); padding: clamp(10px, 3.2vw, 15px); border-radius: clamp(15px, 4vw, 19px); }
+  .card-label { margin-top: clamp(14px, 5vw, 25px); font-size: clamp(9px, 2.8vw, 11px); }
+  .card-amount { font-size: clamp(15px, 5.8vw, 23px); letter-spacing: -.5px; }
+  .card-footer { gap: 4px; font-size: clamp(9px, 2.7vw, 11px); }
+  .teaser-head { font-size: clamp(9px, 2.8vw, 11px); gap: 2px; }
+  .teaser-amount { font-size: clamp(14px, 5.2vw, 21px); letter-spacing: -.4px; }
+  .treasure-img { width: clamp(72px, 24vw, 100px); height: clamp(68px, 23vw, 94px); }
+  .page-head { padding-left: clamp(16px, 6vw, 24px); padding-right: clamp(16px, 6vw, 24px); }
+  .page-head h1, .parent-head h1 { font-size: clamp(24px, 7vw, 30px); overflow-wrap: anywhere; }
+  .profile-content { padding-left: clamp(16px, 6vw, 24px); padding-right: clamp(16px, 6vw, 24px); }
+  .bottom-nav { flex: 0 0 auto; height: calc(72px + env(safe-area-inset-bottom)); min-height: calc(72px + env(safe-area-inset-bottom)); padding: 7px max(5px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(5px, env(safe-area-inset-left)); }
+  .nav-item { min-width: 0; flex: 1 1 0; font-size: clamp(9px, 2.6vw, 10px); padding: 0 1px; gap: 3px; white-space: nowrap; }
+  .nav-icon { width: 100%; max-width: 42px; }
+  .home-indicator { height: calc(12px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); }
+  .overlay { position: absolute; inset: 0; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); align-items: center; }
+  .dialog { width: 100%; max-width: 440px; max-height: calc(100svh - 24px); overflow-y: auto; padding: clamp(16px, 5vw, 20px); }
+  .role-picker { width: 100%; max-width: 460px; padding: max(20px, env(safe-area-inset-top)) clamp(16px, 5vw, 24px) max(20px, env(safe-area-inset-bottom)); }
+}
+@media (max-width: 360px) {
+  .balances { gap: 7px; }
+  .bank-card, .savings-teaser { padding: 9px; }
+  .card-brand { font-size: 10px; }
+  .card-amount { font-size: clamp(14px, 5vw, 18px); }
+  .teaser-amount { font-size: clamp(13px, 4.6vw, 16px); }
+  .nav-item { font-size: 8px; }
+  .nav-icon svg { width: 19px; height: 19px; }
 }
