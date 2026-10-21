@@ -1865,3 +1865,102 @@ button,
   .savings-page .savings-page-title { font-size: 34px; }
   .savings-page .big-treasure { height: 218px; flex-basis: 218px; }
 }
+
+
+/* Mobile viewport hardening: keep every screen fitted to the device width. */
+@media (max-width: 600px) {
+  html, body, #root {
+    width: 100%;
+    min-width: 320px;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+  .app-stage {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    overflow-x: clip;
+  }
+  .phone {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+    overflow-x: clip;
+  }
+  .phone-content,
+  .parent-scroll {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+  .phone-content > *,
+  .parent-scroll > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+  img, video, canvas, svg {
+    max-width: 100%;
+  }
+  input, select, textarea {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .balances,
+  .tree-zone {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .section,
+  .profile-content,
+  .page-head,
+  .parent-head {
+    min-width: 0;
+  }
+  .greeting h1,
+  .page-head h1,
+  .parent-head h1,
+  .savings-page-title {
+    overflow-wrap: anywhere;
+  }
+  .bottom-nav {
+    width: 100%;
+    min-width: 0;
+    padding-left: max(6px, env(safe-area-inset-left));
+    padding-right: max(6px, env(safe-area-inset-right));
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-item {
+    min-width: 0;
+    flex: 1 1 0;
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+  .overlay {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+  .dialog {
+    min-width: 0;
+    max-width: 100%;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+}
+@media (max-width: 360px) {
+  .status { padding-left: 14px; padding-right: 14px; }
+  .brandbar { padding-left: 14px; padding-right: 14px; }
+  .greeting { padding-left: 14px; padding-right: 14px; }
+  .section { padding-left: 14px; padding-right: 14px; }
+  .balances { padding-left: 14px; padding-right: 14px; gap: 8px; }
+  .bank-card, .savings-teaser { padding: 11px; }
+  .card-amount { font-size: clamp(16px, 5vw, 23px); }
+  .teaser-amount { font-size: clamp(15px, 4.8vw, 21px); }
+  .nav-item { font-size: 9px; }
+  .nav-icon { width: 36px; }
+}
