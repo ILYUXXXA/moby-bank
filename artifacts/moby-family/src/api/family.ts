@@ -66,6 +66,8 @@ async function get<T>(path: string, fallback: T): Promise<T> {
   }
 }
 export const getFamily = () => get<FamilyResponse>(`/api/v1/family/my?family_id=${encodeURIComponent(ACTIVE_FAMILY_ID)}`, mockFamily);
+export type UserCardSummary = { card_id: string; bank_name: string; product_name: string; card_mask: string; currency: Currency; status: 'ACTIVE' | 'BLOCKED' | 'EXPIRED'; is_primary: boolean };
+export const getUserCards = (userId: string) => request<{ cards: UserCardSummary[] }>(`/api/v1/users/${encodeURIComponent(userId)}/cards`, { headers: parentHeaders({ 'X-Actor-User-Id': userId }) });
 const parentChildPath = (id: string) => `/api/v1/parent/children/${encodeURIComponent(id)}`;
 const childPath = (id: string) => `/api/v1/child/${encodeURIComponent(id)}`;
 // Child-mode reads use the dedicated child API; parent screens use parent-scoped endpoints.
