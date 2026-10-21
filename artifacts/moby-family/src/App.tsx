@@ -341,7 +341,7 @@ function App() {
         ...item,
         name: child.child_info.name,
         age: child.child_info.age,
-        balance: toAmount(child.balance_block.amount),
+        balance: toAmount(child?.balance_block?.amount),
       } : item));
     }).catch(error => { if (!cancelled) showToast(error instanceof Error ? error.message : 'Не удалось загрузить данные ребёнка'); });
     return () => { cancelled = true; };
