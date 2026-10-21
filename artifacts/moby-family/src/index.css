@@ -1556,3 +1556,39 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .learning-screen .map-pair .map-node b { width: 42px !important; height: 42px !important; }
   .learning-screen .map-triple .map-node b { width: 38px !important; height: 38px !important; }
 }
+
+
+/* Consistent Lucide icon alignment across parent and child screens */
+button > svg,
+a > svg,
+.icon-btn svg,
+.nav-icon svg,
+.setting-icon svg,
+.transaction-icon svg,
+.role-icon svg,
+.notification-icon svg,
+.back-role svg,
+.back-pill svg,
+.text-action svg {
+  display: block;
+  flex: 0 0 auto;
+  vertical-align: middle;
+}
+button,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+.icon-btn,
+.nav-item,
+.setting-row,
+.role-card,
+.back-role,
+.back-pill,
+.text-action {
+  align-items: center;
+}
+.nav-item { justify-content: center; }
+.nav-icon { flex: 0 0 auto; }
+.setting-chevron { flex: 0 0 auto; width: 18px; height: 18px; }
+.transaction-icon svg,
+.notification-icon svg { width: 19px; height: 19px; }
