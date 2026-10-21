@@ -530,3 +530,26 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .lesson-top h1{font-size:20px}
   .lesson-top .nut-balance{padding:7px 9px;font-size:12px}
 }
+
+
+/* Learning map polish: touch-friendly open levels and consistent reward icon */
+.learning-screen { box-sizing: border-box; width: 100%; max-width: 100%; overflow-x: hidden; }
+.learning-screen .golden-nut, .lesson-screen .golden-nut { display: inline-block; vertical-align: middle; flex: none; }
+.nut-balance { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; box-sizing: border-box; }
+.map-open { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.map-open b { transition: transform .16s ease, box-shadow .16s ease; }
+.map-open:active b { transform: scale(.96); box-shadow: 0 3px 0 #dfe4f3; }
+.map-open small { color: #5960ff; font-size: 10px; letter-spacing: .35px; }
+.map-open b { border-color: #dce2f2; box-shadow: 0 3px 0 #edf0fa; }
+.map-start, .map-open { touch-action: manipulation; }
+@media(max-width:380px) {
+  .learning-screen { padding-left: 18px!important; padding-right: 18px!important; }
+  .learning-title { font-size: 30px; letter-spacing: -.6px; }
+  .map-node b { width: 64px; height: 64px; border-radius: 21px; }
+  .map-start { width: 190px; }
+  .map-start b { width: 76px; height: 76px; }
+  .map-triple { gap: 4px; }
+  .map-triple .map-node b { width: 56px; height: 56px; border-radius: 18px; }
+  .map-triple .map-node strong { font-size: 11px; overflow-wrap: anywhere; }
+  .start-lesson-card { padding: 18px 16px; }
+}
