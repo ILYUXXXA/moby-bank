@@ -304,7 +304,7 @@ function App() {
           if (!childCardId) throw new Error('У ребёнка не найдена карта для пополнения цели. Проверь, что карта создана и активна.');
           const apiGoal = (apiPayloads.piggybank?.goals ?? []).filter(Boolean).find(goal => goal.title === goalTitle);
           if (!apiGoal) throw new Error('Цель не найдена в актуальных данных API');
-          await contributeToGoal(apiGoal.goal_id, { amount: amount.toFixed(2), card_id: childCardId, title: `Пополнение цели: ${goalTitle}` }, crypto.randomUUID(), actorId);
+          await contributeToGoal(apiGoal.goal_id, { amount: amount.toFixed(2), source_card_id: childCardId, title: `Пополнение цели: ${goalTitle}` }, crypto.randomUUID(), actorId);
           const refreshed = role === 'parent' ? await getChildPiggybank(childId) : await getChildPiggybankAsChild(childId);
           setApiPayloads(current => ({ ...current, piggybank: refreshed }));
           setGoals((refreshed.goals ?? []).filter(Boolean).map(goal => ({ id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount), target: Math.max(1, toAmount(goal.target_amount)), glyph: 'gift' as const })));
