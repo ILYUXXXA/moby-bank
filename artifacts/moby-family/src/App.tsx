@@ -285,19 +285,27 @@ function App() {
     } else if (modal?.kind === 'topup') {
       const amount = Number(data.get('amount'));
       if (!Number.isFinite(amount) || amount <= 0) { setFormError('Введи сумму больше нуля.'); return; }
-      if (role === 'parent') {
+      const goalTitle = modal.title.startsWith('Пополнить: ') ? modal.title.replace('Пополнить: ', '') : '';
+      if (goalTitle) {
+        const childId = role === 'parent' ? selected : (currentUserId ?? selected);
+        const actorId = role === 'parent' ? undefined : childId;
+        try {
+          // The API contract requires card_id (the child's card), not source_card_id.
+          // In child mode, use the child profile endpoint to resolve the card and submit as the child actor.
+          const childDetails = role === 'parent' ? await getChild(childId) : await getChildProfile(childId);
+          const childCardId = childDetails?.balance_block?.card_id ?? apiPayloads.child?.balance_block?.card_id;
+          if (!childCardId) throw new Error('Не удалось определить карту ребёнка для пополнения цели');
+          const apiGoal = (apiPayloads.piggybank?.goals ?? []).filter(Boolean).find(goal => goal.title === goalTitle);
+          if (!apiGoal) throw new Error('Цель не найдена в актуальных данных API');
+          await contributeToGoal(apiGoal.goal_id, { amount: amount.toFixed(2), card_id: childCardId, title: `Пополнение цели: ${goalTitle}` }, crypto.randomUUID(), actorId);
+          const refreshed = role === 'parent' ? await getChildPiggybank(childId) : await getChildPiggybankAsChild(childId);
+          setApiPayloads(current => ({ ...current, piggybank: refreshed }));
+          setGoals((refreshed.goals ?? []).filter(Boolean).map(goal => ({ id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount), target: Math.max(1, toAmount(goal.target_amount)), glyph: 'gift' as const })));
+          showToast('Цель пополнена через API');
+        } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось пополнить цель'); return; }
+      } else if (role === 'parent') {
         const childCardId = apiPayloads.child?.balance_block?.card_id;
-        const goalTitle = modal.title.startsWith('Пополнить: ') ? modal.title.replace('Пополнить: ', '') : '';
-        const apiGoal = (apiPayloads.piggybank?.goals ?? []).filter(Boolean).find(goal => goal.title === goalTitle);
-        if (goalTitle && apiGoal && childCardId) {
-          try {
-            await contributeToGoal(apiGoal.goal_id, { amount: amount.toFixed(2), source_card_id: childCardId, title: `Пополнение цели: ${goalTitle}` }, crypto.randomUUID());
-            const refreshed = await getChildPiggybank(selected);
-            setApiPayloads(current => ({ ...current, piggybank: refreshed }));
-            setGoals((refreshed.goals ?? []).filter(Boolean).map(goal => ({ id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount), target: Math.max(1, toAmount(goal.target_amount)), glyph: 'gift' as const })));
-            showToast('Цель пополнена через API');
-          } catch (error) { setFormError(error instanceof Error ? error.message : 'Не удалось пополнить цель'); return; }
-        } else if (modal.title.toLowerCase().includes('карту') && childCardId) {
+        if (modal.title.toLowerCase().includes('карту') && childCardId) {
           const parentCardId = (import.meta.env.VITE_PARENT_CARD_ID as string | undefined)?.trim() || apiPayloads.tasks?.tasks?.find(task => task?.payout_source_card?.card_id)?.payout_source_card?.card_id;
           if (!parentCardId) { setFormError('Не удалось определить родительскую карту из данных API. Проверь настройку payout_source_card или задай VITE_PARENT_CARD_ID в окружении.'); return; }
           try {
@@ -314,7 +322,7 @@ function App() {
           return;
         }
       } else {
-        setFormError('Пополнение карты выполняет родитель: это перевод между картами, а не создание денег на счёте.');
+        setFormError('Не удалось определить операцию пополнения.');
         return;
       }
     } else if (modal?.kind === 'proof' && taskToSubmit && currentUserId) {
