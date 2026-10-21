@@ -3,10 +3,11 @@ import { FAMILY_ID, PARENT_USER_ID } from '../config/userIds';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://yelisei-project.onrender.com').replace(/\/$/, '');
 const ACTIVE_FAMILY_ID = import.meta.env.VITE_FAMILY_ID || FAMILY_ID;
-const dataSources: Record<string, 'api' | 'mock'> = {};
-export const getDataSource = (path: string): 'api' | 'mock' => {
+const dataSources: Record<string, 'api' | 'mock' | 'error'> = {};
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true';
+export const getDataSource = (path: string): 'api' | 'mock' | 'error' => {
   const normalized = path.replace('/api/v1/children/', '/api/v1/parent/children/');
-  return dataSources[path] ?? dataSources[normalized] ?? 'mock';
+  return dataSources[path] ?? dataSources[normalized] ?? (USE_MOCKS ? 'mock' : 'error');
 };
 
 export type Currency = 'BYN' | 'RUB' | 'USD' | 'EUR';
@@ -19,7 +20,7 @@ export type FamilyParent = { id: string; name: string; birth_date?: string; age?
 export type FamilyResponse = { family_id: string; parents: FamilyParent[]; children: FamilyChild[] };
 export type ChildResponse = {
   child_info: { id: string; name: string; birth_date: string; age: number; avatar_url: string | null };
-  balance_block: { amount: number | string; currency: Currency; card_id: string; card_bank: string; card_type: string; card_mask: string };
+  balance_block: { amount: number | string; currency: Currency; card_id: string; card_bank: string; card_type: string; card_mask: string } | null;
   money_categories: { limit: { limit_amount: number | string; frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY'; spent_in_current_period: number | string; currency: Currency }; piggy_bank: { amount: number | string; currency: Currency } };
   most_recent_current_goal: { id: string | null; title: string; current_amount: number | string; target_amount: number | string; currency: Currency } | null;
   pocket_money_settings: { is_auto_transfer_enabled: boolean; transfer_amount: number | string; currency: Currency; recurrence: { frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY'; day_of_week: number | null; time: string }; next_transfer_date: string; card_spend_limit_daily: number | string };
@@ -58,13 +59,22 @@ async function get<T>(path: string, fallback: T): Promise<T> {
     dataSources[path] = 'api';
     return data;
   } catch (error) {
-    dataSources[path] = 'mock';
+    dataSources[path] = USE_MOCKS ? 'mock' : 'error';
     console.error(`API GET failed for ${API_BASE_URL}${path}`, error);
-    return fallback;
+    if (USE_MOCKS) return fallback;
+    throw error;
   }
 }
 export const getFamily = () => get<FamilyResponse>(`/api/v1/family/my?family_id=${encodeURIComponent(ACTIVE_FAMILY_ID)}`, mockFamily);
 const parentChildPath = (id: string) => `/api/v1/parent/children/${encodeURIComponent(id)}`;
+const childPath = (id: string) => `/api/v1/child/${encodeURIComponent(id)}`;
+// Child-mode reads use the dedicated child API; parent screens use parent-scoped endpoints.
+export const getChildDashboard = (id: string) => get<ChildResponse>(`${childPath(id)}/dashboard`, mockChild);
+export const getChildProfile = (id: string) => get<ChildResponse>(`${childPath(id)}/profile`, mockChild);
+export const getChildTasksAsChild = (id: string) => get<TasksResponse>(`${childPath(id)}/tasks`, mockTasks);
+export const getChildPiggybankAsChild = (id: string) => get<PiggybankResponse>(`${childPath(id)}/piggybank`, mockPiggybank);
+export const getChildTransactionsAsChild = (id: string, from: string, to: string) => get<TransactionsResponse>(`${childPath(id)}/transactions?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`, mockTransactions);
+export const getChildAnalyticsAsChild = (id: string, from: string, to: string) => get<AnalyticsResponse>(`${childPath(id)}/analytics?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`, mockAnalytics);
 export const getChild = (id: string) => get<ChildResponse>(parentChildPath(id), mockChild);
 export const getChildPiggybank = (id: string) => get<PiggybankResponse>(`${parentChildPath(id)}/piggybank`, mockPiggybank);
 export const getChildTasks = (id: string) => get<TasksResponse>(`${parentChildPath(id)}/tasks`, mockTasks);
