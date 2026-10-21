@@ -117,7 +117,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .page-head {padding:8px 24px 12px}
 .page-head h1 {margin:0;font-size:28px;line-height:1.2;font-weight:800;color:#304b70;letter-spacing:-.5px}
 .savings-hero {padding:0 24px 20px;text-align:center}
-.big-treasure {height:186px;display:grid;place-items:center;color:#416bff}
+.big-treasure {height:186px;display:grid;place-items:center;position:relative;overflow:visible;color:#416bff}
 .big-treasure svg {filter:drop-shadow(0 12px 14px #496dbb30)}
 .balance-label {font-size:13px;color:#8494ad;margin-top:1px}
 .balance-big {font-size:29px;font-weight:800;color:#304b70;margin:2px 0 17px}
