@@ -182,19 +182,19 @@ function App() {
   const breakPiggybank = async () => {
     if (isBreakingSavings) return;
     const childId = currentUserId ?? selected;
-    const cardId = apiPayloads.child?.balance_block?.card_id;
     const fundedGoals = goals.filter(goal => toAmount(goal.saved) > 0);
     if (fundedGoals.length === 0) {
       showToast('В копилке пока нет накоплений для перевода');
       return;
     }
-    if (!cardId) {
-      showToast('Не удалось найти активную карту для возврата денег');
-      return;
-    }
-
     setIsBreakingSavings(true);
     try {
+      // The child dashboard contract does not include card_id. Read the parent child-resource
+      // endpoint, whose balance_block does include the actual card_id, before issuing withdrawals.
+      const childDetails = await getChild(childId);
+      const cardId = childDetails?.balance_block?.card_id;
+      if (!cardId) throw new Error('GET child profile did not return balance_block.card_id');
+
       // Each withdrawal is a real POST request. Do not clear the UI until all requests succeed.
       for (const goal of fundedGoals) {
         const amount = toAmount(goal.saved);
@@ -220,7 +220,7 @@ function App() {
           getChildPiggybankAsChild(childId),
         ]);
         setApiPayloads(current => ({ ...current, child: dashboard, piggybank }));
-        if (dashboard?.balance_block) setBalance(toAmount(dashboard.balance_block.amount));
+        if (dashboard?.balance_block) setBalance(toAmount((dashboard.balance_block as any).active_balance ?? (dashboard.balance_block as any).amount));
         if (piggybank) {
           setSavings(toAmount(piggybank.total_saved_amount));
           setGoals((piggybank.goals ?? []).filter(Boolean).map(goal => ({
@@ -415,9 +415,9 @@ function App() {
       if (cancelled) return;
       setProfileName(data?.child_info?.name ?? 'Ребёнок');
       const goalsBalance = toAmount(piggybank?.total_saved_amount ?? data?.money_categories?.piggy_bank?.amount);
-      const allBalance = toAmount(data?.balance_block?.amount);
-      // The dashboard balance_block.amount is the available card balance, not a combined balance.
-      // Do not subtract the piggybank amount: that can incorrectly force a positive card balance to zero.
+      // Child dashboard's documented field is active_balance; parent profile uses amount.
+      // Prefer the exact child API contract and retain amount only for compatible legacy responses.
+      const allBalance = toAmount((data?.balance_block as any)?.active_balance ?? (data?.balance_block as any)?.amount);
       setSavings(goalsBalance);
       setBalance(allBalance);
       if (data?.child_info?.id) setSelected(data.child_info.id);
