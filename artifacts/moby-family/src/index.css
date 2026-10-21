@@ -1306,3 +1306,113 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .learning-screen .map-node-state.map-node-complete {
   color: #278765;
 }
+
+
+/* Connector geometry: every branch starts at the previous row and lands on the node centres. */
+.learning-screen .learning-map {
+  width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
+}
+.learning-screen .map-branch-two,
+.learning-screen .map-branch-three {
+  display: block;
+  width: 100%;
+  flex: 0 0 auto;
+  overflow: visible;
+  pointer-events: none;
+}
+.learning-screen .map-branch-two {
+  height: 58px;
+  margin: -12px 0 0;
+}
+.learning-screen .map-branch-three {
+  height: 62px;
+  margin: -14px 0 0;
+}
+.learning-screen .map-connector path {
+  vector-effect: non-scaling-stroke;
+  fill: none;
+  stroke: #cbd5e8;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.learning-screen .map-pair,
+.learning-screen .map-triple {
+  position: relative;
+  display: grid;
+  width: 100%;
+  box-sizing: border-box;
+  align-items: start;
+  justify-items: center;
+  column-gap: 0;
+}
+.learning-screen .map-pair {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.learning-screen .map-triple {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.learning-screen .map-pair > .map-node,
+.learning-screen .map-triple > .map-node {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: center;
+  justify-self: stretch;
+  gap: 7px;
+}
+.learning-screen .map-pair > .map-node b {
+  width: 62px;
+  height: 62px;
+  border-radius: 22px;
+}
+.learning-screen .map-triple > .map-node b {
+  width: 58px;
+  height: 58px;
+  border-radius: 20px;
+}
+.learning-screen .map-pair > .map-node strong,
+.learning-screen .map-triple > .map-node strong {
+  width: 100%;
+  max-width: 100%;
+  min-height: 2.5em;
+  padding: 0 4px;
+  box-sizing: border-box;
+  text-align: center;
+  line-height: 1.25;
+  overflow-wrap: normal;
+}
+.learning-screen .map-pair > .map-node .map-lock,
+.learning-screen .map-triple > .map-node .map-lock {
+  margin: 10px auto 0;
+}
+.learning-screen .map-unlock-note {
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 18px auto 0;
+  padding: 0 8px;
+  text-align: center;
+}
+@media (max-width: 390px) {
+  .learning-screen .map-pair > .map-node b {
+    width: 54px;
+    height: 54px;
+    border-radius: 19px;
+  }
+  .learning-screen .map-triple > .map-node b {
+    width: 48px;
+    height: 48px;
+    border-radius: 17px;
+  }
+  .learning-screen .map-pair > .map-node strong,
+  .learning-screen .map-triple > .map-node strong {
+    font-size: 10px;
+    padding: 0 2px;
+  }
+  .learning-screen .map-branch-two { height: 54px; margin-top: -10px; }
+  .learning-screen .map-branch-three { height: 58px; margin-top: -10px; }
+}
