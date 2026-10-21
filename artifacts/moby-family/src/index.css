@@ -1867,100 +1867,67 @@ button,
 }
 
 
-/* Mobile viewport hardening: keep every screen fitted to the device width. */
+
+
+/* Real device layout: scale spacing and card proportions to narrow phone widths. */
 @media (max-width: 600px) {
-  html, body, #root {
-    width: 100%;
-    min-width: 320px;
-    max-width: 100%;
-    overflow-x: clip;
-  }
   .app-stage {
-    width: 100%;
-    min-width: 0;
+    min-height: 100svh;
+    height: 100svh;
     padding: 0;
-    overflow-x: clip;
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
   }
   .phone {
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
-    height: 100dvh;
-    min-height: 100dvh;
-    max-height: 100dvh;
-    margin: 0;
+    width: 100vw;
+    height: 100svh;
+    min-height: 0;
+    max-height: none;
+    flex: 1 1 auto;
     border-radius: 0;
     box-shadow: none;
-    overflow-x: clip;
+    overflow: hidden;
   }
-  .phone-content,
-  .parent-scroll {
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
-    overflow-x: clip;
-  }
-  .phone-content > *,
-  .parent-scroll > * {
-    min-width: 0;
-    max-width: 100%;
-  }
-  img, video, canvas, svg {
-    max-width: 100%;
-  }
-  input, select, textarea {
-    max-width: 100%;
-    min-width: 0;
-  }
-  .balances,
-  .tree-zone {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .section,
-  .profile-content,
-  .page-head,
-  .parent-head {
-    min-width: 0;
-  }
-  .greeting h1,
-  .page-head h1,
-  .parent-head h1,
-  .savings-page-title {
-    overflow-wrap: anywhere;
-  }
-  .bottom-nav {
-    width: 100%;
-    min-width: 0;
-    padding-left: max(6px, env(safe-area-inset-left));
-    padding-right: max(6px, env(safe-area-inset-right));
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  .nav-item {
-    min-width: 0;
-    flex: 1 1 0;
-    padding-left: 2px;
-    padding-right: 2px;
-  }
-  .overlay {
-    padding-left: max(12px, env(safe-area-inset-left));
-    padding-right: max(12px, env(safe-area-inset-right));
-  }
-  .dialog {
-    min-width: 0;
-    max-width: 100%;
-    max-height: calc(100dvh - 24px);
+  .phone-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
     overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
   }
+  .status { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  .brandbar { padding-left: clamp(14px, 4.5vw, 20px); padding-right: clamp(14px, 4.5vw, 20px); }
+  .greeting { padding-left: clamp(14px, 4.5vw, 20px); padding-right: clamp(14px, 4.5vw, 20px); }
+  .greeting h1 { font-size: clamp(20px, 6vw, 24px); overflow-wrap: anywhere; }
+  .section { padding-left: clamp(14px, 4.5vw, 20px); padding-right: clamp(14px, 4.5vw, 20px); }
+  .balances { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(8px, 2.5vw, 12px); padding-left: clamp(14px, 4.5vw, 20px); padding-right: clamp(14px, 4.5vw, 20px); }
+  .bank-card, .savings-teaser { min-width: 0; height: clamp(164px, 48vw, 194px); padding: clamp(10px, 3.2vw, 15px); border-radius: clamp(15px, 4vw, 19px); }
+  .card-label { margin-top: clamp(14px, 5vw, 25px); font-size: clamp(9px, 2.8vw, 11px); }
+  .card-amount { font-size: clamp(15px, 5.8vw, 23px); letter-spacing: -.5px; }
+  .card-footer { gap: 4px; font-size: clamp(9px, 2.7vw, 11px); }
+  .teaser-head { font-size: clamp(9px, 2.8vw, 11px); gap: 2px; }
+  .teaser-amount { font-size: clamp(14px, 5.2vw, 21px); letter-spacing: -.4px; }
+  .treasure-img { width: clamp(72px, 24vw, 100px); height: clamp(68px, 23vw, 94px); }
+  .page-head { padding-left: clamp(16px, 6vw, 24px); padding-right: clamp(16px, 6vw, 24px); }
+  .page-head h1, .parent-head h1 { font-size: clamp(24px, 7vw, 30px); overflow-wrap: anywhere; }
+  .profile-content { padding-left: clamp(16px, 6vw, 24px); padding-right: clamp(16px, 6vw, 24px); }
+  .bottom-nav { flex: 0 0 auto; height: calc(72px + env(safe-area-inset-bottom)); min-height: calc(72px + env(safe-area-inset-bottom)); padding: 7px max(5px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(5px, env(safe-area-inset-left)); }
+  .nav-item { min-width: 0; flex: 1 1 0; font-size: clamp(9px, 2.6vw, 10px); padding: 0 1px; gap: 3px; white-space: nowrap; }
+  .nav-icon { width: 100%; max-width: 42px; }
+  .home-indicator { height: calc(12px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); }
+  .overlay { position: absolute; inset: 0; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); align-items: center; }
+  .dialog { width: 100%; max-width: 440px; max-height: calc(100svh - 24px); overflow-y: auto; padding: clamp(16px, 5vw, 20px); }
+  .role-picker { width: 100%; max-width: 460px; padding: max(20px, env(safe-area-inset-top)) clamp(16px, 5vw, 24px) max(20px, env(safe-area-inset-bottom)); }
 }
 @media (max-width: 360px) {
-  .status { padding-left: 14px; padding-right: 14px; }
-  .brandbar { padding-left: 14px; padding-right: 14px; }
-  .greeting { padding-left: 14px; padding-right: 14px; }
-  .section { padding-left: 14px; padding-right: 14px; }
-  .balances { padding-left: 14px; padding-right: 14px; gap: 8px; }
-  .bank-card, .savings-teaser { padding: 11px; }
-  .card-amount { font-size: clamp(16px, 5vw, 23px); }
-  .teaser-amount { font-size: clamp(15px, 4.8vw, 21px); }
-  .nav-item { font-size: 9px; }
-  .nav-icon { width: 36px; }
+  .balances { gap: 7px; }
+  .bank-card, .savings-teaser { padding: 9px; }
+  .card-brand { font-size: 10px; }
+  .card-amount { font-size: clamp(14px, 5vw, 18px); }
+  .teaser-amount { font-size: clamp(13px, 4.6vw, 16px); }
+  .nav-item { font-size: 8px; }
+  .nav-icon svg { width: 19px; height: 19px; }
 }
