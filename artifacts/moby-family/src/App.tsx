@@ -268,7 +268,9 @@ function App() {
   useEffect(() => {
     if (role !== 'child' || !currentUserId) return;
     let cancelled = false;
-    Promise.all([getChildDashboard(currentUserId), getChildPiggybankAsChild(currentUserId), getChildTasksAsChild(currentUserId), getChildTransactionsAsChild(currentUserId, historyFrom, historyTo), getChildAnalyticsAsChild(currentUserId, analyticsFrom, analyticsTo)]).then(([data, piggybank, tasks, transactions, analytics]) => {
+    Promise.all([getChildDashboard(currentUserId), getChildPiggybankAsChild(currentUserId), getChildTasksAsChild(currentUserId), getChildAnalyticsAsChild(currentUserId, analyticsFrom, analyticsTo)]).then(([data, piggybank, tasks, analytics]) => {
+      const dashboardTransactions = ((data as any)?.recent_transactions ?? []).filter(Boolean);
+      const transactions: TransactionsResponse = { requested_period: { date_from: historyFrom, date_to: historyTo }, summary: { total_income: '0.00', total_outcome: '0.00', currency: 'BYN' }, items: dashboardTransactions.map((item: any) => ({ transaction_id: item.transaction_id, title: item.title, timestamp: item.timestamp, direction: item.direction, amount: item.amount, currency: item.currency, category_code: item.category_code, related_entity: { type: 'NONE', id: null } })) };
       if (cancelled) return;
       setProfileName(data?.child_info?.name ?? 'Ребёнок');
       setBalance(toAmount((data?.balance_block as any)?.active_balance ?? data?.balance_block?.amount));
