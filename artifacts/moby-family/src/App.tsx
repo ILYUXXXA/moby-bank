@@ -51,29 +51,22 @@ function BottomNav({ active, onSelect, mode = 'child' }: { active: string; onSel
   return <><nav className="bottom-nav" aria-label="Основная навигация">{items.map(item=><button key={item.key} className={`nav-item ${active===item.key?'active':''}`} data-testid={`nav-${item.key}`} onClick={()=>onSelect(item.key)}><span className="nav-icon"><item.icon size={21} strokeWidth={active===item.key?2.2:1.8}/></span><span>{item.label}</span></button>)}</nav><div className="home-indicator"><i/></div></>;
 }
 function GoldenNut({ size = 25 }: { size?: number }) {
-  const id = `golden-nut-${size}`;
-  return <svg className="golden-nut" width={size} height={size} viewBox="0 0 28 28" role="img" aria-label="золотой орех">
+  return <svg className="golden-nut" width={size} height={size} viewBox="0 0 27 27" role="img" aria-label="золотой орех">
     <defs>
-      <linearGradient id={id + "-shell"} x1="0" y1="0" x2="0.85" y2="1">
-        <stop offset="0%" stopColor="#FFF7D5" />
-        <stop offset="28%" stopColor="#F6D987" />
-        <stop offset="62%" stopColor="#DDA943" />
-        <stop offset="100%" stopColor="#A96C20" />
+      <linearGradient id="golden-nut-shell" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#FFF0BB" />
+        <stop offset="45%" stopColor="#E9BF62" />
+        <stop offset="100%" stopColor="#BE8833" />
       </linearGradient>
-      <linearGradient id={id + "-shine"} x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#FFFFFF" stopOpacity=".8" />
-        <stop offset="100%" stopColor="#FFF1B5" stopOpacity="0" />
-      </linearGradient>
-      <linearGradient id={id + "-seam"} x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stopColor="#80521C" stopOpacity=".35" />
-        <stop offset="50%" stopColor="#80521C" />
-        <stop offset="100%" stopColor="#80521C" stopOpacity=".35" />
+      <linearGradient id="golden-nut-groove" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stopColor="#966D29" stopOpacity=".35" />
+        <stop offset="48%" stopColor="#966D29" stopOpacity=".95" />
+        <stop offset="100%" stopColor="#966D29" stopOpacity=".4" />
       </linearGradient>
     </defs>
-    <path d="M13.9 2.1C11.9.5 9.4 1.3 8.3 3.2 5.5 2.1 3.2 4 3.4 6.8 1.1 8.3 1.2 11.1 3 13.1 1.6 15.5 2.9 18.2 5.4 18.8 5.8 21.6 8.2 23.2 10.7 22.2 12.1 25.1 15.4 25.4 17.2 22.9 20.2 23.2 22.2 21 21.7 18.5 24.6 17 25.1 14.1 23.2 12 24.6 9.3 23.2 6.7 20.5 6.3 20.1 3.3 17.1 1.6 13.9 2.1Z" fill={`url(#${id}-shell)`} stroke="#966323" strokeWidth=".85" strokeLinejoin="round"/>
-    <path d="M7.7 4.1C5.6 5.3 5.4 7.7 6.8 9.1 4.7 10.3 4.8 12.8 6.6 14.1 4.8 16.2 6 18.7 8.2 19.2M19.5 5.8C17.4 6.9 17.3 9.1 19 10.5 16.8 11.8 17.1 14.3 19 15.5 17.4 17.4 18 19.8 20.1 20.2" fill="none" stroke="#FFF0B0" strokeOpacity=".8" strokeWidth="1.1" strokeLinecap="round"/>
-    <path d="M13.9 2.4C11.5 4.1 11.8 6.6 13.6 8.3 11.3 10.1 11.5 12.5 13.7 14.1 11.8 16 12.1 18.6 14.3 20.1 13.4 21.6 13.9 23.3 15 24.4" fill="none" stroke={`url(#${id}-seam)`} strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M9.2 3.2C10.5 2.5 11.6 3.1 12.1 4.1M4.1 8.4C3.6 9.6 4 10.7 4.8 11.2M21.7 7.7C22.5 8.6 22.5 9.6 21.9 10.3" fill="none" stroke={`url(#${id}-shine)`} strokeWidth="1.2" strokeLinecap="round"/>
+    <path d="M13.6 2.2C10.9.1 7.7 1.2 6.6 3.6 3.7 2.7 1.6 5.2 2.1 8.1.1 10.1.8 13.1 2.9 14.8 1.5 17.4 3 20.1 5.6 20.7 6.4 23.8 9.5 25.1 12.1 23.7 14.1 26.1 17.4 25.3 18.4 22.8 21.6 22.9 23.5 20.1 22.5 17.6 25 15.6 24.8 12.6 22.7 10.9 24.1 8 22.6 5.4 20 5.1 19.2 2.2 16.2 1 13.6 2.2Z" fill="url(#golden-nut-shell)" stroke="#966D29" strokeWidth=".8" strokeLinejoin="round"/>
+    <path d="M13.5 2.6C10.9 4.8 11.3 7.5 13 9.4 10.7 11.3 10.8 14.3 13.1 16.1 11.5 18.1 12 21.6 14.1 24" fill="none" stroke="url(#golden-nut-groove)" strokeWidth="1.1" strokeLinecap="round"/>
+    <path d="M7 4.1C8.7 5.4 9.3 7.3 8.7 9.1M4 12.1c2.2.1 3.6 1.4 3.7 3.5m12.2-8.1c-1.8 1.1-2.5 2.9-1.8 4.8m2.1 3.1c-2.2.1-3.4 1.6-3.3 3.7" fill="none" stroke="#966D29" strokeOpacity=".55" strokeWidth=".7" strokeLinecap="round"/>
   </svg>;
 }
 function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
