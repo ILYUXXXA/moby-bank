@@ -1015,3 +1015,264 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .learning-screen .map-pair .map-node b { width: 50px; height: 50px; }
   .learning-screen .map-triple .map-node b { width: 42px; height: 42px; }
 }
+
+
+/* Rebuilt learning map: consistent hierarchy, real branch geometry, and clear locked states. */
+.learning-screen .brandbar {
+  height: 44px;
+  min-height: 44px;
+  margin: 0 0 14px;
+  padding: 0 20px;
+  gap: 12px;
+}
+.learning-screen .brandbar .brand { font-size: 23px; }
+.learning-screen .brandbar .nut-balance {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 11px;
+  font-size: 13px;
+  line-height: 1;
+}
+.learning-screen .learning-title {
+  margin: 10px 0 8px;
+  color: #29476e;
+  font-size: 30px;
+  line-height: 1.12;
+  letter-spacing: -.8px;
+}
+.learning-screen .learning-subtitle {
+  margin: 0 0 22px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #8799b5;
+}
+.learning-screen .map-eyebrow {
+  margin: 0 0 15px;
+  color: #8596b2;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.learning-screen .learning-map {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 4px 0 10px;
+  text-align: center;
+}
+.learning-screen .map-side-icon {
+  position: absolute;
+  z-index: -1;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(50, 76, 119, .06);
+  opacity: .9;
+}
+.learning-screen .map-side-pig { top: 90px; right: 0; background: #fff3d7; color: #d5a03d; }
+.learning-screen .map-side-bank { top: 300px; left: 0; background: #eceeff; color: #8192ed; }
+.learning-screen .map-start {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 166px;
+  min-height: 182px;
+  margin: 0 auto;
+  padding: 13px 12px 12px;
+  border: 0;
+  border-radius: 90px 90px 34px 34px;
+  background: #eeefff;
+  color: #515be9;
+  box-shadow: none;
+}
+.learning-screen .map-start small {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #747bee;
+}
+.learning-screen .map-start b {
+  display: grid;
+  place-items: center;
+  width: 66px;
+  height: 66px;
+  border: 5px solid #d5d8ff;
+  border-radius: 23px;
+  background: #5b61f6;
+  color: white;
+  font-size: 27px;
+  line-height: 1;
+}
+.learning-screen .map-start strong {
+  max-width: 140px;
+  color: #4e58e5;
+  font-size: 13px;
+  line-height: 1.2;
+}
+.learning-screen .map-node-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 1px;
+  color: #626be8;
+  font-size: 9px;
+  font-weight: 700;
+}
+.learning-screen .map-down {
+  width: 40px;
+  height: 34px;
+  margin: 0 auto;
+}
+.learning-screen .map-down svg {
+  display: block;
+  width: 40px;
+  height: 34px;
+}
+.learning-screen .map-connector {
+  display: block;
+  flex: none;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+.learning-screen .map-connector path {
+  fill: none;
+  stroke: #cbd5e8;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.learning-screen .map-level-two {
+  align-self: center;
+  margin: 0 auto;
+}
+.learning-screen .map-node:not(.map-start) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  cursor: default;
+}
+.learning-screen .map-node:not(.map-start) b {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 58px;
+  height: 58px;
+  border: 4px solid #e0e7f5;
+  border-radius: 21px;
+  background: #fff;
+  color: #8da0bf;
+  font-size: 25px;
+  line-height: 1;
+  box-shadow: 0 4px 10px rgba(49, 74, 114, .03);
+}
+.learning-screen .map-node:not(.map-start) strong {
+  display: block;
+  max-width: 120px;
+  min-height: 25px;
+  color: #526b8d;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: normal;
+}
+.learning-screen .map-node .map-lock {
+  width: 15px;
+  height: 15px;
+  margin: 1px auto 0;
+  color: #a6b5cd;
+  stroke-width: 2.2;
+}
+.learning-screen .map-node:disabled { opacity: 1; }
+.learning-screen .map-branch-two { height: 46px; }
+.learning-screen .map-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 0;
+  width: 100%;
+}
+.learning-screen .map-pair .map-node { justify-self: center; width: 100%; }
+.learning-screen .map-branch-three { height: 48px; }
+.learning-screen .map-triple {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 0;
+  width: 100%;
+}
+.learning-screen .map-triple .map-node { justify-self: center; width: 100%; }
+.learning-screen .map-triple .map-node b {
+  width: 50px;
+  height: 50px;
+  border-radius: 18px;
+  font-size: 22px;
+}
+.learning-screen .map-triple .map-node strong {
+  min-height: 27px;
+  padding: 0 2px;
+  font-size: 10px;
+}
+.learning-screen .map-unlock-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 15px 8px 0;
+  color: #8a9bb5;
+  font-size: 10px;
+  line-height: 1.4;
+}
+.learning-screen .start-lesson-card {
+  margin-top: 8px;
+  padding: 18px 16px 16px;
+  border: 1px solid #edf1fa;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(46, 74, 117, .045);
+}
+.learning-screen .start-lesson-heading { margin-bottom: 15px; gap: 8px; }
+.learning-screen .start-lesson-heading h2 { font-size: 18px; line-height: 1.25; }
+.learning-screen .start-lesson-heading p { font-size: 11px; }
+.learning-screen .start-lesson-heading .reward { font-size: 16px; }
+.learning-screen .primary-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 52px;
+  border-radius: 15px;
+  font-size: 14px;
+}
+@media (max-width: 390px) {
+  .learning-screen .brandbar { padding: 0 18px; }
+  .learning-screen .learning-title { font-size: 28px; }
+  .learning-screen .map-start { width: 154px; min-height: 170px; }
+  .learning-screen .map-start b { width: 60px; height: 60px; }
+  .learning-screen .map-side-icon { width: 44px; height: 44px; border-radius: 15px; }
+  .learning-screen .map-side-pig { top: 92px; }
+  .learning-screen .map-side-bank { top: 285px; }
+  .learning-screen .map-branch-two { height: 40px; }
+  .learning-screen .map-branch-three { height: 42px; }
+  .learning-screen .map-node:not(.map-start) b { width: 52px; height: 52px; border-radius: 19px; }
+  .learning-screen .map-triple .map-node b { width: 44px; height: 44px; border-radius: 16px; }
+  .learning-screen .map-node:not(.map-start) strong { font-size: 10px; }
+  .learning-screen .map-triple .map-node strong { font-size: 9px; }
+}
