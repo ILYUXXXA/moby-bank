@@ -17,24 +17,32 @@ function toAmount(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 function PiggybankIllustration({ className }: { className?: string }) {
-  return <svg className={className} viewBox="0 0 180 130" role="img" aria-label="Фиолетовая копилка-свинка с монеткой" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="91" cy="116" rx="58" ry="7" fill="#d8e1fb"/>
-    <path d="M129 54c17-7 22 4 17 15-3 7-9 9-15 7" fill="none" stroke="#7062e8" strokeWidth="8" strokeLinecap="round"/>
-    <path d="M45 57c-1-12 5-24 15-28 10 5 15 13 15 23" fill="#b9b5ff" stroke="#7062e8" strokeWidth="2.5" strokeLinejoin="round"/>
-    <path d="M68 34c-1-13 2-21 7-24 11 3 17 15 17 26" fill="#c7c3ff" stroke="#7062e8" strokeWidth="2.5" strokeLinejoin="round"/>
-    <ellipse cx="91" cy="72" rx="47" ry="33" fill="#9d97ff" stroke="#7062e8" strokeWidth="2.5"/>
-    <ellipse cx="112" cy="62" rx="23" ry="20" fill="#c4c0ff"/>
-    <path d="M51 68c-12-8-25-5-28 5-3 9 6 17 20 17h13" fill="#b5b0ff" stroke="#7062e8" strokeWidth="2.5" strokeLinejoin="round"/>
-    <ellipse cx="37" cy="78" rx="15" ry="10" fill="#c3bfff" stroke="#7062e8" strokeWidth="2.5"/>
-    <circle cx="32" cy="77" r="2" fill="#7062e8"/><circle cx="42" cy="77" r="2" fill="#7062e8"/>
-    <circle cx="67" cy="64" r="3.2" fill="#283d7b"/><circle cx="68" cy="63" r="1" fill="white"/>
-    <ellipse cx="72" cy="79" rx="6" ry="3.5" fill="#e68bd7"/>
-    <path d="M69 104l-2 8c0 3 5 4 8 2l5-9M113 104l2 8c1 3 7 3 9 0l1-9" fill="#7062e8" stroke="#7062e8" strokeWidth="2" strokeLinecap="round"/>
-    <path d="M77 34h24" stroke="#7062e8" strokeWidth="3" strokeLinecap="round"/>
-    <circle cx="105" cy="14" r="11" fill="#ffe08a" stroke="#d7a83d" strokeWidth="2"/>
-    <path d="M105 7v14M101 10h6c3 0 3 4 0 4h-4c-3 0-3 4 0 4h6" fill="none" stroke="#a87816" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M145 39l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#ffd65c"/>
-    <circle cx="132" cy="80" r="12" fill="#ffdc71" stroke="#fff0b6" strokeWidth="2"/><path d="M132 72l2.4 5 5.6.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.6-.8z" fill="white"/>
+  // Vector recreation of the Figma "Gamified piggy bank" illustration (116 × 99.76).
+  return <svg className={className} viewBox="0 0 116 99.76" width="116" height="99.76" role="img" aria-label="Фиолетовая копилка-свинка с золотой монеткой" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="59.94" cy="90.55" rx="44.465" ry="4.835" fill="#6972C5" opacity=".129412"/>
+    <path d="M88.5 49.8c5-7 14-8 17.2-1.6 3.1 6.2-1.1 12.6-8.7 12.6" fill="none" stroke="#6565DB" strokeWidth="3.86667" strokeLinecap="round"/>
+    <rect x="30.29" y="69.6" width="14.82" height="18.69" rx="5.15556" fill="#6565DB"/>
+    <rect x="73.47" y="68.96" width="14.18" height="18.04" rx="5.15556" fill="#6565DB"/>
+    <path d="M18.04 56.7c0-15.9 14.7-28.99 39.2-28.99h17.2c15.1 0 22.87 12.1 22.87 27.8 0 16.1-14.7 28.27-39.7 28.27H41.7C27.1 83.78 18.04 72.9 18.04 56.7Z" fill="#A3A5FF" stroke="#6565DB" strokeWidth="1.28889"/>
+    <path d="M27.71 43.4c7.4-9.3 18.1-12.47 31.7-12.47h15.1c-12.8 2.2-19.6 8.6-23.3 17.4-7.1 1.6-15.8-.1-23.5-4.93Z" fill="#D9DCFF" opacity=".65"/>
+    <path d="M32.87 42.53V24.5c0-3.4 1.7-5.17 4.3-5.17 7.6 0 13.74 10.2 13.74 23.2Z" fill="#A3A5FF" stroke="#6565DB" strokeWidth="1.28889"/>
+    <path d="M36.73 36.73V26.9c4.3 2.5 6.8 6 7.8 9.83Z" fill="#C7C6FF"/>
+    <rect x="55.42" y="28.02" width="18.69" height="3.22" rx="1.93333" fill="#6565DB" transform="rotate(-5 55.42 28.02)"/>
+    <circle cx="72.82" cy="62.52" r="10.96" fill="#B7872D"/>
+    <circle cx="71.86" cy="61.55" r="9.99" fill="#F7CD62" stroke="#FFF1B9" strokeWidth="1.28889"/>
+    <path d="M71.86 54.9l2.05 4.4 4.84.7-3.5 3.4.83 4.81-4.22-2.25-4.23 2.25.81-4.81-3.49-3.4 4.83-.7Z" fill="#FFF5C8"/>
+    <ellipse cx="42.2" cy="61.22" rx="4.835" ry="2.58" fill="#B986ED"/>
+    <path d="M9.67 60.58c0-5.35 5.77-9.67 12.89-9.67s12.89 4.32 12.89 9.67-5.77 9.66-12.89 9.66S9.67 65.92 9.67 60.58Z" fill="#D9DCFF" stroke="#6565DB" strokeWidth="1.28889"/>
+    <rect x="21.59" y="57.36" width="3.22" height="5.16" rx="1.61" fill="#6565DB"/>
+    <rect x="13.86" y="57.36" width="3.22" height="5.16" rx="1.61" fill="#6565DB"/>
+    <ellipse cx="39.31" cy="49" rx="2.58" ry="3.22" fill="#253A73"/>
+    <circle cx="39.31" cy="47.36" r=".965" fill="#FFFFFF"/>
+    <path d="M94.73 23.84l2.1 5.1 4.3 1.65-4.3 1.7-2.1 5.08-1.7-5.08-4.3-1.7 4.3-1.65Z" fill="#F7CD62"/>
+    <g transform="rotate(-12 63.8 7.47)">
+      <circle cx="63.8" cy="7.47" r="8.38" fill="#F7CD62" stroke="#B7872D" strokeWidth="1"/>
+      <circle cx="63.8" cy="7.47" r="6.88" fill="#F7CD62" stroke="#FFEDAD" strokeWidth="1"/>
+      <text x="63.8" y="11" textAnchor="middle" fontFamily="Inter, sans-serif" fontSize="10.89" fontWeight="700" fill="#B7872D">₽</text>
+    </g>
   </svg>;
 }
 type Goal = { id: string | number; title: string; saved: number; target: number; glyph: 'headphones'|'bike'|'game'|'book'|'gift' };
