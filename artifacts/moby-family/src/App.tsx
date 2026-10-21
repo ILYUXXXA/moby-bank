@@ -181,53 +181,76 @@ function App() {
   const openModal = (kind: ModalKind, title: string, description?: string) => { setFormError(''); setModal({kind, title, description}); };
   const breakPiggybank = async () => {
     if (isBreakingSavings) return;
+    const childId = currentUserId ?? selected;
     const cardId = apiPayloads.child?.balance_block?.card_id;
     const fundedGoals = goals.filter(goal => toAmount(goal.saved) > 0);
-    if (!cardId && fundedGoals.length > 0) {
+    if (fundedGoals.length === 0) {
+      showToast('В копилке пока нет накоплений для перевода');
+      return;
+    }
+    if (!cardId) {
       showToast('Не удалось найти активную карту для возврата денег');
       return;
     }
+
     setIsBreakingSavings(true);
     try {
-      // Withdraw each goal's full current amount to the child's active card through POST API calls.
+      // Each withdrawal is a real POST request. Do not clear the UI until all requests succeed.
       for (const goal of fundedGoals) {
+        const amount = toAmount(goal.saved);
+        if (amount <= 0) continue;
         await withdrawFromGoal(String(goal.id), {
-          amount: toAmount(goal.saved).toFixed(2),
-          card_id: String(cardId),
+          amount: amount.toFixed(2),
+          card_id: cardId,
           title: `Разбить копилку: ${goal.title}`,
         }, crypto.randomUUID());
       }
-      // Refresh server state after all successful withdrawals.
-      const [dashboard, piggybank] = await Promise.all([
-        getChildDashboard(currentUserId ?? selected),
-        getChildPiggybankAsChild(currentUserId ?? selected),
-      ]);
-      setApiPayloads(current => ({ ...current, child: dashboard, piggybank }));
-      setBalance(toAmount(dashboard?.balance_block?.amount));
-      setSavings(toAmount(piggybank?.total_saved_amount));
-      setGoals((piggybank?.goals ?? []).filter(Boolean).map(goal => ({
-        id: goal.goal_id,
-        title: goal.title,
-        saved: toAmount(goal.current_amount),
-        target: Math.max(1, toAmount(goal.target_amount)),
-        glyph: /науш|headphone/i.test(goal.title) ? 'headphones' as const : /велосип|bike/i.test(goal.title) ? 'bike' as const : /игр|game|пристав/i.test(goal.title) ? 'game' as const : /книг|конструкт|book/i.test(goal.title) ? 'book' as const : 'gift' as const,
-      })));
-      showToast('Все накопления переведены на активный баланс');
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Не удалось разбить копилку. Проверь соединение и попробуй снова.');
-      // Re-fetch what the server currently reports in case some withdrawals succeeded before an error.
+
+      // Reflect the completed transfer immediately, even if a subsequent GET is temporarily stale.
+      const transferred = fundedGoals.reduce((sum, goal) => sum + toAmount(goal.saved), 0);
+      setBalance(current => current + transferred);
+      setSavings(0);
+      setGoals(current => current.map(goal => ({ ...goal, saved: 0 })));
+      showToast('Накопления переведены на активный баланс');
+
+      // Reconcile the optimistic UI with the authoritative server state when it is available.
       try {
         const [dashboard, piggybank] = await Promise.all([
-          getChildDashboard(currentUserId ?? selected),
-          getChildPiggybankAsChild(currentUserId ?? selected),
+          getChildDashboard(childId),
+          getChildPiggybankAsChild(childId),
         ]);
         setApiPayloads(current => ({ ...current, child: dashboard, piggybank }));
-        setBalance(toAmount(dashboard?.balance_block?.amount));
-        setSavings(toAmount(piggybank?.total_saved_amount));
-        setGoals((piggybank?.goals ?? []).filter(Boolean).map(goal => ({
-          id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount),
-          target: Math.max(1, toAmount(goal.target_amount)), glyph: 'gift' as const,
-        })));
+        if (dashboard?.balance_block) setBalance(toAmount(dashboard.balance_block.amount));
+        if (piggybank) {
+          setSavings(toAmount(piggybank.total_saved_amount));
+          setGoals((piggybank.goals ?? []).filter(Boolean).map(goal => ({
+            id: goal.goal_id,
+            title: goal.title,
+            saved: toAmount(goal.current_amount),
+            target: Math.max(1, toAmount(goal.target_amount)),
+            glyph: /науш|headphone/i.test(goal.title) ? 'headphones' as const : /велосип|bike/i.test(goal.title) ? 'bike' as const : /игр|game|пристав/i.test(goal.title) ? 'game' as const : /книг|конструкт|book/i.test(goal.title) ? 'book' as const : 'gift' as const,
+          })));
+        }
+      } catch (refreshError) {
+        console.warn('Transfer succeeded, but refreshing the displayed balances failed', refreshError);
+      }
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Не удалось разбить копилку. Проверь соединение и попробуй снова.');
+      // A request may have succeeded before a later withdrawal failed: reload server state to avoid a false balance.
+      try {
+        const [dashboard, piggybank] = await Promise.all([
+          getChildDashboard(childId),
+          getChildPiggybankAsChild(childId),
+        ]);
+        setApiPayloads(current => ({ ...current, child: dashboard, piggybank }));
+        if (dashboard?.balance_block) setBalance(toAmount(dashboard.balance_block.amount));
+        if (piggybank) {
+          setSavings(toAmount(piggybank.total_saved_amount));
+          setGoals((piggybank.goals ?? []).filter(Boolean).map(goal => ({
+            id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount),
+            target: Math.max(1, toAmount(goal.target_amount)), glyph: 'gift' as const,
+          })));
+        }
       } catch { /* Keep the last known UI state if refresh also fails. */ }
     } finally {
       setIsBreakingSavings(false);
