@@ -501,3 +501,60 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .answer-good{color:#258767}.answer-bad{color:#c96a4c}
 .lesson-success{padding:16px;border-radius:18px;background:#eaf7f1;color:#258767;margin:14px 0;line-height:1.5}
 @media(min-width:520px){.learning-screen,.lesson-screen{padding-left:28px!important;padding-right:28px!important}.map-triple .map-node b{width:72px;height:72px}}
+
+
+/* Golden nut token: custom shell, not an emoji; scales cleanly on mobile. */
+.golden-nut{
+  position:relative;
+  display:inline-block;
+  flex:none;
+  vertical-align:middle;
+  box-sizing:border-box;
+  border:0.8px solid #966d29;
+  border-radius:46% 44% 48% 46%;
+  background:linear-gradient(180deg,#fff0bb 0%,#e9bf62 45%,#be8833 100%);
+  box-shadow:inset 0 1px 1px #fff9d8b8,inset 0 -1px 1px #95651f55;
+  transform:rotate(-7deg);
+}
+.golden-nut::before{
+  content:"";
+  position:absolute;
+  inset:2px 4px 2px 5px;
+  box-sizing:border-box;
+  border:1.1px solid #966d29;
+  border-top-color:#c18a35;
+  border-bottom-color:#c18a35;
+  border-radius:48% 45% 50% 42%;
+  opacity:.7;
+}
+.golden-nut i{
+  position:absolute;
+  top:2px;
+  bottom:2px;
+  left:48%;
+  width:2px;
+  border-left:1px solid #966d29;
+  border-radius:50%;
+  opacity:.72;
+  transform:rotate(8deg);
+}
+.nut-balance{display:inline-flex;align-items:center;gap:6px}
+.start-lesson-card p b{display:inline-flex;align-items:center;gap:5px}
+.lesson-success{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+@media(max-width:380px){
+  .learning-screen,.lesson-screen{padding-left:16px!important;padding-right:16px!important}
+  .learning-screen .brandbar{margin-bottom:20px}
+  .learning-title{font-size:29px;letter-spacing:-.6px}
+  .learning-subtitle{font-size:15px}
+  .map-start{max-width:100%;box-sizing:border-box}
+  .map-node b{width:62px;height:62px;font-size:26px}
+  .map-pair{gap:8px}
+  .map-triple{gap:4px}
+  .map-triple .map-node b{width:54px;height:54px;border-radius:18px;font-size:23px}
+  .map-triple .map-node strong{font-size:10px;overflow-wrap:anywhere}
+  .start-lesson-card{padding:18px 16px;border-radius:22px}
+  .start-lesson-card h2{font-size:21px}
+  .lesson-top{gap:8px}
+  .lesson-top h1{font-size:20px}
+  .lesson-top .nut-balance{padding:7px 9px;font-size:12px}
+}
