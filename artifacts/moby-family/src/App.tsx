@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics, getChildDashboard, getChildPiggybankAsChild, getChildTasksAsChild, getChildTransactionsAsChild, getChildAnalyticsAsChild, getDataSource, getUserCards, createChild, createParent, createTask, approveTask, rejectTask, createGoal, createCardTransfer, contributeToGoal, submitTask } from './api/family';
+import { getFamily, getChild, getChildPiggybank, getChildTasks, getChildTransactions, getChildAnalytics, getChildDashboard, getChildPiggybankAsChild, getChildTasksAsChild, getChildTransactionsAsChild, getChildAnalyticsAsChild, getDataSource, getUserCards, createChild, createParent, createTask, approveTask, rejectTask, createGoal, createCardTransfer, contributeToGoal, withdrawFromGoal, submitTask } from './api/family';
 import type { FamilyResponse, ChildResponse, PiggybankResponse, TasksResponse, TransactionsResponse, AnalyticsResponse } from './api/family';
 import { PARENT_USER_ID, CHILD_USER_ID } from './config/userIds';
 import {
@@ -139,6 +139,7 @@ function App() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [balance, setBalance] = useState(15.4);
   const [savings, setSavings] = useState(100);
+  const [isBreakingSavings, setIsBreakingSavings] = useState(false);
   const [modal, setModal] = useState<ModalState>(null);
   const [toast, setToast] = useState('');
   const [unread, setUnread] = useState<number[]>([1, 2]);
@@ -178,6 +179,60 @@ function App() {
   };
   const navigateParent = (key: string) => { setParentTab(key); };
   const openModal = (kind: ModalKind, title: string, description?: string) => { setFormError(''); setModal({kind, title, description}); };
+  const breakPiggybank = async () => {
+    if (isBreakingSavings) return;
+    const cardId = apiPayloads.child?.balance_block?.card_id;
+    const fundedGoals = goals.filter(goal => toAmount(goal.saved) > 0);
+    if (!cardId && fundedGoals.length > 0) {
+      showToast('Не удалось найти активную карту для возврата денег');
+      return;
+    }
+    setIsBreakingSavings(true);
+    try {
+      // Withdraw each goal's full current amount to the child's active card through POST API calls.
+      for (const goal of fundedGoals) {
+        await withdrawFromGoal(String(goal.id), {
+          amount: toAmount(goal.saved).toFixed(2),
+          card_id: String(cardId),
+          title: `Разбить копилку: ${goal.title}`,
+        }, crypto.randomUUID());
+      }
+      // Refresh server state after all successful withdrawals.
+      const [dashboard, piggybank] = await Promise.all([
+        getChildDashboard(currentUserId ?? selected),
+        getChildPiggybankAsChild(currentUserId ?? selected),
+      ]);
+      setApiPayloads(current => ({ ...current, child: dashboard, piggybank }));
+      setBalance(toAmount(dashboard?.balance_block?.amount));
+      setSavings(toAmount(piggybank?.total_saved_amount));
+      setGoals((piggybank?.goals ?? []).filter(Boolean).map(goal => ({
+        id: goal.goal_id,
+        title: goal.title,
+        saved: toAmount(goal.current_amount),
+        target: Math.max(1, toAmount(goal.target_amount)),
+        glyph: /науш|headphone/i.test(goal.title) ? 'headphones' as const : /велосип|bike/i.test(goal.title) ? 'bike' as const : /игр|game|пристав/i.test(goal.title) ? 'game' as const : /книг|конструкт|book/i.test(goal.title) ? 'book' as const : 'gift' as const,
+      })));
+      showToast('Все накопления переведены на активный баланс');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Не удалось разбить копилку. Проверь соединение и попробуй снова.');
+      // Re-fetch what the server currently reports in case some withdrawals succeeded before an error.
+      try {
+        const [dashboard, piggybank] = await Promise.all([
+          getChildDashboard(currentUserId ?? selected),
+          getChildPiggybankAsChild(currentUserId ?? selected),
+        ]);
+        setApiPayloads(current => ({ ...current, child: dashboard, piggybank }));
+        setBalance(toAmount(dashboard?.balance_block?.amount));
+        setSavings(toAmount(piggybank?.total_saved_amount));
+        setGoals((piggybank?.goals ?? []).filter(Boolean).map(goal => ({
+          id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount),
+          target: Math.max(1, toAmount(goal.target_amount)), glyph: 'gift' as const,
+        })));
+      } catch { /* Keep the last known UI state if refresh also fails. */ }
+    } finally {
+      setIsBreakingSavings(false);
+    }
+  };
   const readNotification = (id: number) => setUnread(ids => ids.filter(item => item !== id));
 
   const submitModal = async (event: FormEvent<HTMLFormElement>) => {
@@ -336,11 +391,12 @@ function App() {
       const transactions: TransactionsResponse = { requested_period: { date_from: historyFrom, date_to: historyTo }, summary: { total_income: '0.00', total_outcome: '0.00', currency: 'BYN' }, items: dashboardTransactions.map((item: any) => ({ transaction_id: item.transaction_id, title: item.title, timestamp: item.timestamp, direction: item.direction, amount: item.amount, currency: item.currency, category_code: item.category_code, related_entity: { type: 'NONE', id: null } })) };
       if (cancelled) return;
       setProfileName(data?.child_info?.name ?? 'Ребёнок');
-      const goalsBalance = toAmount(data?.money_categories?.piggy_bank?.amount ?? piggybank?.total_saved_amount);
+      const goalsBalance = toAmount(piggybank?.total_saved_amount ?? data?.money_categories?.piggy_bank?.amount);
       const allBalance = toAmount(data?.balance_block?.amount);
-      // balance_block.amount is the total balance; money in the piggybank is reserved for goals.
+      // The dashboard balance_block.amount is the available card balance, not a combined balance.
+      // Do not subtract the piggybank amount: that can incorrectly force a positive card balance to zero.
       setSavings(goalsBalance);
-      setBalance(Math.max(0, allBalance - goalsBalance));
+      setBalance(allBalance);
       if (data?.child_info?.id) setSelected(data.child_info.id);
       const mappedGoals = (piggybank?.goals ?? []).filter(Boolean).map(goal => ({ id: goal.goal_id, title: goal.title, saved: toAmount(goal.current_amount), target: Math.max(1, toAmount(goal.target_amount)), glyph: /науш|headphone/i.test(goal.title) ? 'headphones' as const : /велосип|bike/i.test(goal.title) ? 'bike' as const : /игр|game|пристав/i.test(goal.title) ? 'game' as const : /книг|конструкт|book/i.test(goal.title) ? 'book' as const : 'gift' as const }));
       setGoals(mappedGoals);
@@ -446,7 +502,7 @@ function App() {
   <section className="section"><div className="section-title"><h2>Задания от родителей</h2><button className="text-action" data-testid="show-all-tasks" onClick={()=>showToast(`Заданий: ${apiPayloads.tasks?.tasks?.length ?? 0}`)}>Все <ChevronRight size={14} style={{verticalAlign:'middle'}}/></button></div><div className="task-strip">{(apiPayloads.tasks?.tasks ?? []).slice(0,3).map(task=><button className="task-card" key={task.task_id} data-testid={`task-${task.task_id}`} onClick={()=>{if(['IN_PROGRESS','REJECTED_NEED_FIX'].includes(task.status)){setTaskToSubmit(task.task_id);openModal('proof',`Отправить на проверку: ${task.title}`);}else{showToast(`Статус задания: ${({IN_PROGRESS:'В процессе',WAITING_REVIEW:'Ожидает проверки',REJECTED_NEED_FIX:'Нужно исправить',COMPLETED:'Выполнено',CANCELLED:'Отменено'} as const)[task.status]}`);}}}><div className="task-reward"><span>+{toAmount(task.reward_amount).toFixed(2).replace('.', ',')} {task.currency}</span><Award size={18}/></div><div className="task-copy">{task.title}</div><div className="task-progress">{({IN_PROGRESS:'В процессе',WAITING_REVIEW:'Ожидает проверки',REJECTED_NEED_FIX:'Нужно исправить',COMPLETED:'Выполнено',CANCELLED:'Отменено'} as const)[task.status]}</div></button>)}{!(apiPayloads.tasks?.tasks?.length)&&<div className="empty-note">Новых заданий нет</div>}</div></section>
   <section className="section"><div className="section-title"><h2>Твои последние операции</h2><button className="text-action" data-testid="all-transactions" onClick={()=>navigateChild('history')}>Все <ChevronRight size={14} style={{verticalAlign:'middle'}}/></button></div><div className="transactions">{(apiPayloads.transactions?.items ?? []).slice(0,3).map((item,index)=><div className="transaction" key={item.transaction_id} data-testid={`transaction-${index}`}><span className="transaction-icon"><History size={19}/></span><span className="transaction-copy"><b>{item.title}</b><small>{new Date(item.timestamp).toLocaleDateString('ru-RU')} · {item.category_code}</small></span><span className="transaction-amount">{item.direction==='INCOME'?'+':'−'}{toAmount(item.amount).toFixed(2).replace('.', ',')} {item.currency}</span></div>)}{!(apiPayloads.transactions?.items?.length)&&<div className="empty-note">Операций пока нет</div>}</div></section></div><BottomNav active="home" onSelect={navigateChild}/></>;
 
-  const childSavings = <><div className="phone-content savings-page"><StatusBar/><div className="brandbar"><Brand dark/></div><section className="savings-hero"><h1 className="savings-page-title">Твои цели</h1><div className="big-treasure"><span className="savings-coin coin-a">₽</span><span className="savings-coin coin-b">₽</span><span className="savings-coin coin-c">₽</span><span className="savings-coin coin-d">₽</span><span className="savings-coin coin-e">₽</span><PiggybankIllustration className="treasure-large"/></div><div className="balance-label">Всего накоплено</div><div className="balance-big">{savings.toFixed(2).replace('.', ',')} BYN</div><button className="primary-btn savings-create-btn" data-testid="create-goal" onClick={()=>openModal('goal','Создать цель')}><Plus size={19}/>Создать цель</button><button className="savings-break-btn" data-testid="break-savings" onClick={()=>openModal('generic','Разбить копилку','Чтобы сохранить накопления для твоих целей, эта функция пока недоступна. Ты можешь создать цель или пополнить существующую.')}>Разбить копилку</button></section><section className="savings-list savings-goals-section"><div className="section-title"><h2>Твои цели</h2><span className="active-pill">{activeGoals} активных</span></div>{goals.map(goal=>{const pct=Math.min(100,Math.round(goal.saved/Math.max(1,goal.target)*100));return <div className="saving-goal" key={goal.id} data-testid={`savings-goal-${goal.id}`} onClick={()=>openModal('topup',`Пополнить: ${goal.title}`)}><div className="saving-goal-title">{goal.title}<ChevronRight size={18} color="#6057F5"/></div><div className="saving-goal-meta"><span>{goal.saved.toFixed(2).replace('.', ',')} из {goal.target.toFixed(2).replace('.', ',')} BYN</span><b>{pct}%</b></div><div className="progress"><i style={{width:`${pct}%`}}/></div><div className="saving-goal-foot">Осталось {Math.max(0,goal.target-goal.saved).toFixed(2).replace('.', ',')} BYN</div><div className="savings-goal-actions"><button onClick={event=>{event.stopPropagation();openModal('topup',`Пополнить: ${goal.title}`)}}>Пополнить</button><button onClick={event=>{event.stopPropagation();openModal('generic',goal.title,'Здесь будет подробная информация о цели и её настройках.')}}>Подробнее</button></div></div>})}{goals.length===0&&<div className="saving-goal savings-empty-goal"><b>Начни копить на мечту!</b><span>Создай первую цель — и следи, как приближаешься к ней шаг за шагом.</span><button onClick={()=>openModal('goal','Создать цель')}>Создать первую цель</button></div>}<div className="closed-goals"><div className="closed-goals-title">Завершённые цели <ChevronDown size={20}/></div><div className="closed-goals-empty">Тут появятся цели, которые ты уже достигнешь <CheckCircle2 size={21}/></div></div></section></div><BottomNav active="savings" onSelect={navigateChild}/></>;
+  const childSavings = <><div className="phone-content savings-page"><StatusBar/><div className="brandbar"><Brand dark/></div><section className="savings-hero"><h1 className="savings-page-title">Твои цели</h1><div className="big-treasure"><span className="savings-coin coin-a">₽</span><span className="savings-coin coin-b">₽</span><span className="savings-coin coin-c">₽</span><span className="savings-coin coin-d">₽</span><span className="savings-coin coin-e">₽</span><PiggybankIllustration className="treasure-large"/></div><div className="balance-label">Всего накоплено</div><div className="balance-big">{savings.toFixed(2).replace('.', ',')} BYN</div><button className="primary-btn savings-create-btn" data-testid="create-goal" onClick={()=>openModal('goal','Создать цель')}><Plus size={19}/>Создать цель</button><button className="savings-break-btn" data-testid="break-savings" disabled={isBreakingSavings} onClick={breakPiggybank}>{isBreakingSavings ? 'Переводим накопления…' : 'Разбить копилку'}</button></section><section className="savings-list savings-goals-section"><div className="section-title"><h2>Твои цели</h2><span className="active-pill">{activeGoals} активных</span></div>{goals.map(goal=>{const pct=Math.min(100,Math.round(goal.saved/Math.max(1,goal.target)*100));return <div className="saving-goal" key={goal.id} data-testid={`savings-goal-${goal.id}`} onClick={()=>openModal('topup',`Пополнить: ${goal.title}`)}><div className="saving-goal-title">{goal.title}<ChevronRight size={18} color="#6057F5"/></div><div className="saving-goal-meta"><span>{goal.saved.toFixed(2).replace('.', ',')} из {goal.target.toFixed(2).replace('.', ',')} BYN</span><b>{pct}%</b></div><div className="progress"><i style={{width:`${pct}%`}}/></div><div className="saving-goal-foot">Осталось {Math.max(0,goal.target-goal.saved).toFixed(2).replace('.', ',')} BYN</div><div className="savings-goal-actions"><button onClick={event=>{event.stopPropagation();openModal('topup',`Пополнить: ${goal.title}`)}}>Пополнить</button><button onClick={event=>{event.stopPropagation();openModal('generic',goal.title,'Здесь будет подробная информация о цели и её настройках.')}}>Подробнее</button></div></div>})}{goals.length===0&&<div className="saving-goal savings-empty-goal"><b>Начни копить на мечту!</b><span>Создай первую цель — и следи, как приближаешься к ней шаг за шагом.</span><button onClick={()=>openModal('goal','Создать цель')}>Создать первую цель</button></div>}<div className="closed-goals"><div className="closed-goals-title">Завершённые цели <ChevronDown size={20}/></div><div className="closed-goals-empty">Тут появятся цели, которые ты уже достигнешь <CheckCircle2 size={21}/></div></div></section></div><BottomNav active="savings" onSelect={navigateChild}/></>;
 
   const childProfile = <><div className="phone-content"><StatusBar/><div className="brandbar"><Brand dark/></div><div className="page-head"><h1>Профиль</h1></div><div className="profile-content"><div className="profile-intro"><div className="profile-avatar"><UserRound size={58} strokeWidth={1.5}/></div><h2>{profileName}</h2><p>Твой профиль в Moby Family</p><button className="avatar-action" data-testid="change-avatar" onClick={()=>showToast('Аватар Никиты обновлён')}><Pencil size={16}/>Сменить аватар</button></div><section className="profile-block"><h2>О тебе</h2><div className="profile-info"><div className="profile-info-row"><span>Имя</span><button data-testid="edit-profile-name" onClick={()=>openModal('edit','Изменить имя')} style={{border:0,background:'none',fontWeight:700,color:'#304b70'}}>{profileName}</button></div><div className="profile-info-row"><span>Возраст</span><b>12 лет</b></div></div></section><section className="profile-block"><h2>Настройки</h2><div className="settings-list"><button className="setting-row" data-testid="setting-notifications" onClick={()=>navigateChild('notifications')}><span className="setting-icon"><Bell size={20}/></span><span className="setting-text"><b>Уведомления</b><small>О заданиях и накоплениях</small></span><ChevronRight className="setting-chevron"/></button><button className="setting-row" data-testid="setting-security" onClick={()=>openModal('generic','Безопасность','Код входа в приложение')}><span className="setting-icon"><ShieldCheck size={20}/></span><span className="setting-text"><b>Безопасность</b><small>Код входа в приложение</small></span><ChevronRight className="setting-chevron"/></button><button className="setting-row" data-testid="setting-help" onClick={()=>openModal('generic','Помощь','Ответы на твои вопросы')}><span className="setting-icon"><CircleHelp size={20}/></span><span className="setting-text"><b>Помощь</b><small>Ответы на твои вопросы</small></span><ChevronRight className="setting-chevron"/></button></div></section><button className="logout-btn" data-testid="switch-role-profile" onClick={()=>setRole('picker')}>Выйти из профиля</button></div></div><BottomNav active="profile" onSelect={navigateChild}/></>;
 
