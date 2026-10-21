@@ -1295,3 +1295,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   background: #fff;
   color: #9aaac4;
 }
+
+
+.learning-screen .map-node.map-available.map-node-complete b {
+  border-color: #bfe8d8;
+  background: #eaf9f2;
+  color: #278765;
+}
+.learning-screen .map-node .map-node-state.map-node-complete,
+.learning-screen .map-node-state.map-node-complete {
+  color: #278765;
+}
