@@ -73,7 +73,8 @@ export const getChildDashboard = (id: string) => get<ChildResponse>(`${childPath
 export const getChildProfile = (id: string) => get<ChildResponse>(`${childPath(id)}/profile`, mockChild);
 export const getChildTasksAsChild = (id: string) => get<TasksResponse>(`${childPath(id)}/tasks`, mockTasks);
 export const getChildPiggybankAsChild = (id: string) => get<PiggybankResponse>(`${childPath(id)}/piggybank`, mockPiggybank);
-export const getChildTransactionsAsChild = (id: string, from: string, to: string) => get<TransactionsResponse>(`${childPath(id)}/transactions?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`, mockTransactions);
+// The child API does not expose /transactions; child transactions are returned by /dashboard.recent_transactions.
+export const getChildTransactionsAsChild = async (_id: string, _from: string, _to: string): Promise<TransactionsResponse> => ({ requested_period: { date_from: _from, date_to: _to }, summary: { total_income: '0.00', total_outcome: '0.00', currency: 'BYN' }, items: [] });
 export const getChildAnalyticsAsChild = (id: string, from: string, to: string) => get<AnalyticsResponse>(`${childPath(id)}/analytics?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`, mockAnalytics);
 export const getChild = (id: string) => get<ChildResponse>(parentChildPath(id), mockChild);
 export const getChildPiggybank = (id: string) => get<PiggybankResponse>(`${parentChildPath(id)}/piggybank`, mockPiggybank);
@@ -132,7 +133,7 @@ export const topUpCard = (cardId: string, input: TopUpCardInput, idempotencyKey?
   jsonPost<unknown>(`/api/v1/cards/${idPath(cardId)}/top-ups`, { ...input, amount: money(input.amount) }, idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {});
 export const createGoal = (childId: string, input: CreateGoalInput) =>
   jsonPost<unknown>(`/api/v1/parent/children/${idPath(childId)}/goals`, { ...input, target_amount: money(input.target_amount) });
-export const contributeToGoal = (goalId: string, input: { amount: number | string; card_id: string; title?: string }, idempotencyKey?: string) =>
+export const contributeToGoal = (goalId: string, input: { amount: number | string; source_card_id: string; title?: string }, idempotencyKey?: string) =>
   jsonPost<unknown>(`/api/v1/goals/${idPath(goalId)}/contributions`, { ...input, amount: money(input.amount) }, idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {});
 export const withdrawFromGoal = (goalId: string, input: { amount: number | string; card_id: string; title?: string }, idempotencyKey?: string) =>
   jsonPost<unknown>(`/api/v1/goals/${idPath(goalId)}/withdrawals`, { ...input, amount: money(input.amount) }, idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {});
