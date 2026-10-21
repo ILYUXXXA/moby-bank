@@ -1646,3 +1646,221 @@ button,
  .child-task-detail h3 { font-size:17px; }
  .tasks-status-filters button { padding:0 9px; gap:6px; }
 }
+
+
+/* Figma: Savings / "Копилка — Твои цели" */
+.phone .phone-content.savings-page {
+  background: #F8F7FF;
+  color: #4C6287;
+  padding-bottom: 12px;
+}
+.phone-content.savings-page > .brandbar {
+  background: #F8F7FF;
+  box-shadow: none;
+  padding: 12px 16px 0;
+  height: 44px;
+  min-height: 44px;
+}
+.savings-page .brand { color: #4C6287; font-size: 24px; font-weight: 800; letter-spacing: -.8px; }
+.savings-page .brand em { color: #6057F5; font-size: 8px !important; font-weight: 400; letter-spacing: 0; }
+.savings-page .savings-hero {
+  position: relative;
+  box-sizing: border-box;
+  padding: 12px 16px 24px;
+  min-height: 520px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  overflow: hidden;
+}
+.savings-page .savings-page-title {
+  margin: 0;
+  text-align: left;
+  color: #303846;
+  font-size: 34px;
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+.savings-page .big-treasure {
+  position: relative;
+  height: 218px;
+  flex: 0 0 218px;
+  display: grid;
+  place-items: center;
+  margin: 0 -6px;
+}
+.savings-page .big-treasure svg,
+.savings-page .treasure-large {
+  width: 204px;
+  height: 175.44px;
+  object-fit: contain;
+  filter: none;
+  z-index: 2;
+}
+.savings-page .savings-coin {
+  position: absolute;
+  z-index: 1;
+  width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #F7CD62;
+  border: 1px solid #B7872D;
+  color: #B7872D;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  transform: rotate(-12deg);
+}
+.savings-page .coin-a { left: 20%; top: 20%; }
+.savings-page .coin-b { right: 12%; top: 10%; }
+.savings-page .coin-c { left: 12%; top: 57%; }
+.savings-page .coin-d { right: 8%; top: 64%; }
+.savings-page .coin-e { right: 27%; top: 86%; width: 14px; height: 14px; font-size: 9px; }
+.savings-page .balance-label {
+  margin: 0;
+  color: #AFBAD1;
+  font-size: 14px;
+  line-height: 19px;
+  font-weight: 400;
+}
+.savings-page .balance-big {
+  margin: -5px 0 4px;
+  color: #4C6287;
+  font-size: 34px;
+  line-height: 1.35;
+  font-weight: 700;
+  letter-spacing: -.6px;
+}
+.savings-page .savings-create-btn {
+  width: 100%;
+  min-height: 56px;
+  margin: 4px 0 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border-radius: 10px;
+  background: #6057F5;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+}
+.savings-page .savings-break-btn {
+  width: 100%;
+  min-height: 45px;
+  margin: 0;
+  border: 1.4px solid #6057F5;
+  border-radius: 10px;
+  background: #fff;
+  color: #6057F5;
+  font-size: 16px;
+  font-weight: 700;
+}
+.savings-page .savings-goals-section {
+  box-sizing: border-box;
+  padding: 12px 16px 24px;
+  border-top: 1px solid #DEE0EE;
+}
+.savings-page .savings-goals-section .section-title {
+  min-height: 28px;
+  margin: 0 0 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.savings-page .savings-goals-section .section-title h2,
+.savings-page .closed-goals-title {
+  margin: 0;
+  color: #4C6287;
+  font-size: 21px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+.savings-page .active-pill {
+  padding: 5px 12px;
+  border-radius: 14px;
+  background: #F0EDFF;
+  color: #6057F5;
+  font-size: 11px;
+  line-height: 15px;
+  white-space: nowrap;
+}
+.savings-page .saving-goal {
+  box-sizing: border-box;
+  min-height: 160px;
+  padding: 15px;
+  margin: 0 0 14px;
+  border: 0;
+  border-radius: 22px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  box-shadow: none;
+}
+.savings-page .saving-goal-title {
+  width: 100%;
+  min-height: 23px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #4C6287;
+  font-size: 17px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+.savings-page .saving-goal-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  color: #A4B1C7;
+  font-size: 12px;
+  line-height: 18px;
+}
+.savings-page .saving-goal-meta b { color: #6057F5 !important; font-size: 13px; font-weight: 600; }
+.savings-page .saving-goal .progress { height: 6px; margin: 0; border-radius: 10px; background: #EDEBFF; }
+.savings-page .saving-goal .progress i { background: #6057F5; border-radius: 10px; }
+.savings-page .saving-goal-foot { color: #6057F5; font-size: 13px; line-height: 18px; font-weight: 600; }
+.savings-page .savings-goal-actions { display: flex; gap: 8px; margin-top: 5px; }
+.savings-page .savings-goal-actions button {
+  flex: 1;
+  height: 37px;
+  border: 1px solid #6057F5;
+  border-radius: 10px;
+  background: #fff;
+  color: #6057F5;
+  font-size: 14px;
+  font-weight: 500;
+}
+.savings-page .savings-goal-actions button:first-child { background: #6057F5; color: #fff; }
+.savings-page .savings-empty-goal { align-items: flex-start; color: #4C6287; }
+.savings-page .savings-empty-goal span { color: #8796B0; font-size: 13px; line-height: 1.45; }
+.savings-page .savings-empty-goal button { margin-top: 4px; padding: 10px 14px; border: 0; border-radius: 10px; background: #6057F5; color: #fff; font-weight: 600; }
+.savings-page .closed-goals { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+.savings-page .closed-goals-title { display: flex; justify-content: space-between; align-items: center; }
+.savings-page .closed-goals-empty {
+  min-height: 73px;
+  padding: 15px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  border-radius: 18px;
+  background: #fff;
+  color: #A4B1C7;
+  font-size: 12px;
+}
+.savings-page .closed-goals-empty svg { color: #16A6A0; flex-shrink: 0; }
+.phone:has(.savings-page) .bottom-nav { background: #fff; border-top: 1px solid #E0E8F8; }
+@media (max-width: 420px) {
+  .savings-page .savings-hero { min-height: 520px; }
+  .savings-page .savings-page-title { font-size: 34px; }
+  .savings-page .big-treasure { height: 218px; flex-basis: 218px; }
+}
