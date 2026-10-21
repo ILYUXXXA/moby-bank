@@ -290,11 +290,18 @@ function App() {
         const childId = role === 'parent' ? selected : (currentUserId ?? selected);
         const actorId = role === 'parent' ? undefined : childId;
         try {
-          // The API contract requires card_id (the child's card), not source_card_id.
-          // In child mode, use the child profile endpoint to resolve the card and submit as the child actor.
-          const childDetails = role === 'parent' ? await getChild(childId) : await getChildProfile(childId);
-          const childCardId = childDetails?.balance_block?.card_id ?? apiPayloads.child?.balance_block?.card_id;
-          if (!childCardId) throw new Error('Не удалось определить карту ребёнка для пополнения цели');
+          // The profile endpoint only returns basic identity fields; resolve the card from the dashboard.
+          // Fall back to the user's card list if the dashboard omits balance_block.
+          const childDetails = role === 'parent' ? await getChild(childId) : await getChildDashboard(childId);
+          let childCardId = childDetails?.balance_block?.card_id ?? apiPayloads.child?.balance_block?.card_id;
+          if (!childCardId) {
+            const cardResponse = await getUserCards(childId);
+            const childCard = cardResponse.cards.find(card => card.status === 'ACTIVE' && card.is_primary)
+              ?? cardResponse.cards.find(card => card.status === 'ACTIVE')
+              ?? cardResponse.cards[0];
+            childCardId = childCard?.card_id;
+          }
+          if (!childCardId) throw new Error('У ребёнка не найдена карта для пополнения цели. Проверь, что карта создана и активна.');
           const apiGoal = (apiPayloads.piggybank?.goals ?? []).filter(Boolean).find(goal => goal.title === goalTitle);
           if (!apiGoal) throw new Error('Цель не найдена в актуальных данных API');
           await contributeToGoal(apiGoal.goal_id, { amount: amount.toFixed(2), card_id: childCardId, title: `Пополнение цели: ${goalTitle}` }, crypto.randomUUID(), actorId);
