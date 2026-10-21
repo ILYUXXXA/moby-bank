@@ -422,12 +422,12 @@ function App() {
     <button className="map-node map-start" onClick={()=>{setLessonLevel(1);setLessonTab('video');setLessonChecked(false);setLessonAnswers({});navigateChild('lesson')}}><small>СТАРТ</small><b>1</b><strong>Нужно или<br/>хочется?</strong></button>
     <div className="map-connector map-down"><svg viewBox="0 0 40 54" aria-hidden="true"><path d="M20 2V43m-9-9 9 9 9-9" /></svg></div>
     <button className="map-node map-open map-level-two" onClick={()=>{setLessonLevel(2);setLessonTab('video');setLessonChecked(false);setLessonAnswers({});navigateChild('lesson')}}><b>2</b><strong>Моя копилка</strong><LockKeyhole className="map-lock" size={16}/></button>
-    <svg className="map-connector map-branch-two" viewBox="0 0 360 65" preserveAspectRatio="none" aria-hidden="true"><path d="M180 0 C180 22 96 23 35 48 M180 0 C180 22 264 23 325 48 M28 39 L35 48 L45 39 M315 39 L325 48 L333 39"/></svg>
+    <svg className="map-connector map-branch-two" viewBox="0 0 360 50" preserveAspectRatio="none" aria-hidden="true"><path d="M180 0 C180 24 110 25 90 42 M180 0 C180 24 250 25 270 42 M82 34 L90 42 L98 34 M262 34 L270 42 L278 34"/></svg>
     <div className="map-pair">
       <button className="map-node map-open" onClick={()=>{setLessonLevel(3);setLessonTab('video');setLessonChecked(false);setLessonAnswers({});navigateChild('lesson')}}><b>3</b><strong>План покупок</strong><LockKeyhole className="map-lock" size={16}/></button>
       <button className="map-node map-open" onClick={()=>{setLessonLevel(4);setLessonTab('video');setLessonChecked(false);setLessonAnswers({});navigateChild('lesson')}}><b>4</b><strong>Банк рядом</strong><LockKeyhole className="map-lock" size={16}/></button>
     </div>
-    <svg className="map-connector map-branch-three" viewBox="0 0 500 70" preserveAspectRatio="none" aria-hidden="true"><path d="M250 0 C250 22 110 22 40 55 M250 0 C250 28 250 30 250 55 M250 0 C250 22 390 22 460 55 M32 46 L40 55 L50 46 M242 46 L250 55 L258 46 M450 46 L460 55 L468 46"/></svg>
+    <svg className="map-connector map-branch-three" viewBox="0 0 360 52" preserveAspectRatio="none" aria-hidden="true"><path d="M180 0 C180 23 92 24 60 44 M180 0 V44 M180 0 C180 23 268 24 300 44 M52 36 L60 44 L68 36 M172 36 L180 44 L188 36 M292 36 L300 44 L308 36"/></svg>
     <div className="map-triple">
       <button className="map-node map-open" onClick={()=>{setLessonLevel(5);setLessonTab('video');setLessonChecked(false);setLessonAnswers({});navigateChild('lesson')}}><b>5</b><strong>Умный выбор</strong><LockKeyhole className="map-lock" size={16}/></button>
       <button className="map-node map-open" onClick={()=>{setLessonLevel(6);setLessonTab('video');setLessonChecked(false);setLessonAnswers({});navigateChild('lesson')}}><b>6</b><strong>Копим на мечту</strong><LockKeyhole className="map-lock" size={16}/></button>
