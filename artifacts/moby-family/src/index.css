@@ -875,3 +875,143 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .learning-screen .map-triple .map-node strong { font-size: 9px; }
   .lesson-screen .lesson-video { height: 190px; }
 }
+
+
+/* Final layout correction: keep the logo/balance separate and connectors aligned to nodes. */
+.learning-screen .brandbar {
+  position: relative;
+  z-index: 3;
+  height: 42px;
+  min-height: 42px;
+  margin: 0 0 16px;
+  padding: 0 20px;
+  gap: 12px;
+}
+.learning-screen .brandbar > :first-child {
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+}
+.learning-screen .brandbar .nut-balance {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 12px;
+  line-height: 1;
+  font-size: 14px;
+}
+.learning-screen .learning-title {
+  position: relative;
+  z-index: 1;
+  margin-top: 12px;
+}
+.learning-screen .learning-map {
+  isolation: isolate;
+  overflow: hidden;
+  padding: 4px 0 12px;
+}
+.learning-screen .map-side-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 17px;
+  opacity: .95;
+}
+.learning-screen .map-side-icon svg {
+  width: 27px;
+  height: 27px;
+}
+.learning-screen .map-side-pig {
+  top: 104px;
+  right: 0;
+}
+.learning-screen .map-side-bank {
+  top: 292px;
+  left: 0;
+}
+.learning-screen .map-start {
+  width: 166px;
+  min-height: 166px;
+  gap: 6px;
+  padding: 9px 12px 11px;
+}
+.learning-screen .map-start b {
+  width: 68px;
+  height: 68px;
+  border-width: 6px;
+  border-radius: 23px;
+  font-size: 27px;
+}
+.learning-screen .map-start strong {
+  font-size: 13px;
+}
+.learning-screen .map-start small {
+  font-size: 10px;
+}
+.learning-screen .map-down {
+  height: 30px;
+  margin: 0 auto 2px;
+}
+.learning-screen .map-down svg {
+  display: block;
+  height: 30px;
+}
+.learning-screen .map-branch-two {
+  height: 48px;
+  margin: 0 auto;
+}
+.learning-screen .map-branch-three {
+  height: 50px;
+  margin: 0 auto;
+}
+.learning-screen .map-connector path {
+  stroke: #c7d2e6;
+  stroke-width: 2.5;
+}
+.learning-screen .map-pair {
+  gap: 10px;
+}
+.learning-screen .map-pair .map-node b {
+  width: 56px;
+  height: 56px;
+  border-radius: 19px;
+  font-size: 24px;
+}
+.learning-screen .map-triple .map-node b {
+  width: 48px;
+  height: 48px;
+  border-radius: 17px;
+  font-size: 21px;
+}
+.learning-screen .map-node {
+  gap: 5px;
+}
+.learning-screen .map-node strong {
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+.learning-screen .map-triple .map-node strong {
+  font-size: 9px;
+  min-height: 25px;
+}
+.learning-screen .map-lock {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.3;
+}
+.learning-screen .start-lesson-card {
+  position: relative;
+  z-index: 2;
+  margin-top: 4px;
+}
+@media (max-width: 390px) {
+  .learning-screen .brandbar { padding-left: 20px; padding-right: 20px; }
+  .learning-screen .map-side-pig { top: 96px; right: 0; }
+  .learning-screen .map-side-bank { top: 268px; left: 0; }
+  .learning-screen .map-start { width: 154px; min-height: 154px; }
+  .learning-screen .map-start b { width: 62px; height: 62px; }
+  .learning-screen .map-pair { gap: 4px; }
+  .learning-screen .map-pair .map-node b { width: 50px; height: 50px; }
+  .learning-screen .map-triple .map-node b { width: 42px; height: 42px; }
+}
