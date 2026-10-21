@@ -243,7 +243,7 @@ function App() {
           getChildPiggybankAsChild(childId),
         ]);
         setApiPayloads(current => ({ ...current, child: dashboard, piggybank }));
-        if (dashboard?.balance_block) setBalance(toAmount(dashboard.balance_block.amount));
+        if (dashboard?.balance_block) setBalance(toAmount((dashboard.balance_block as any).active_balance ?? (dashboard.balance_block as any).amount));
         if (piggybank) {
           setSavings(toAmount(piggybank.total_saved_amount));
           setGoals((piggybank.goals ?? []).filter(Boolean).map(goal => ({
