@@ -135,8 +135,11 @@ export const topUpCard = (cardId: string, input: TopUpCardInput, idempotencyKey?
   jsonPost<unknown>(`/api/v1/cards/${idPath(cardId)}/top-ups`, { ...input, amount: money(input.amount) }, idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {});
 export const createGoal = (childId: string, input: CreateGoalInput) =>
   jsonPost<unknown>(`/api/v1/parent/children/${idPath(childId)}/goals`, { ...input, target_amount: money(input.target_amount) });
-export const contributeToGoal = (goalId: string, input: { amount: number | string; source_card_id: string; title?: string }, idempotencyKey?: string) =>
-  jsonPost<unknown>(`/api/v1/goals/${idPath(goalId)}/contributions`, { ...input, amount: money(input.amount) }, idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {});
+export const contributeToGoal = (goalId: string, input: { amount: number | string; card_id: string; title?: string }, idempotencyKey?: string, actorId?: string) =>
+  jsonPost<unknown>(`/api/v1/goals/${idPath(goalId)}/contributions`, { ...input, amount: money(input.amount) }, {
+    ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+    ...(actorId ? { 'X-Actor-User-Id': actorId } : {}),
+  });
 export const withdrawFromGoal = (goalId: string, input: { amount: number | string; card_id: string; title?: string }, idempotencyKey?: string) =>
   jsonPost<unknown>(`/api/v1/goals/${idPath(goalId)}/withdrawals`, { ...input, amount: money(input.amount) }, idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {});
 export const completeGoal = (goalId: string) => noBodyPost<unknown>(`/api/v1/goals/${idPath(goalId)}/complete`);
