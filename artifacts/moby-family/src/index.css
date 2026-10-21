@@ -1592,3 +1592,57 @@ button,
 .setting-chevron { flex: 0 0 auto; width: 18px; height: 18px; }
 .transaction-icon svg,
 .notification-icon svg { width: 19px; height: 19px; }
+
+
+/* Child tasks tab: compact mobile layout based on the supplied reference */
+.child-tasks-screen { background:#f4f7fd; padding-bottom:18px; }
+.child-tasks-screen .learning-title { font-size:27px; line-height:1.2; margin:20px 0 8px; color:#29456f; }
+.child-tasks-screen .learning-subtitle { margin:0 0 24px; font-size:14px; line-height:1.45; color:#8495b1; }
+.tasks-reward-banner { display:flex; align-items:center; gap:13px; padding:15px; margin:0 0 25px; border-radius:20px; background:#e9eeff; color:#4c60ff; }
+.tasks-reward-banner>span { width:42px; height:42px; border-radius:13px; display:grid; place-items:center; background:white; flex:none; }
+.tasks-reward-banner>div { display:flex; flex-direction:column; gap:5px; min-width:0; }
+.tasks-reward-banner b { font-size:16px; line-height:1.2; }
+.tasks-reward-banner small { font-size:12px; color:#53698e; }
+.tasks-status-heading { display:flex; align-items:center; justify-content:space-between; margin:0 0 11px; font-size:13px; color:#29456f; }
+.tasks-status-heading svg { color:#8797b1; }
+.tasks-status-filters { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:24px; }
+.tasks-status-filters button { min-width:0; height:46px; border:1px solid #e0e8f5; border-radius:14px; background:white; display:flex; align-items:center; gap:8px; padding:0 11px; color:#40597f; font-size:12px; text-align:left; }
+.tasks-status-filters button:first-child { grid-column:1 / -1; justify-content:space-between; height:46px; }
+.tasks-status-filters button.selected { background:#4b5fff; border-color:#4b5fff; color:white; }
+.tasks-status-filters button span { margin-left:auto; color:#8496b4; }
+.tasks-status-filters button.selected span { color:white; }
+.task-filter-dot { width:6px; height:6px; border-radius:50%; background:#5c69ee; flex:none; }
+.task-filter-dot.created { background:#4e62ff; }
+.task-filter-dot.in_progress { background:#6571d9; }
+.task-filter-dot.waiting_review { background:#b7791f; }
+.task-filter-dot.completed { background:#329779; }
+.tasks-list-heading { display:flex; justify-content:space-between; align-items:center; margin:0 0 15px; color:#29456f; font-size:18px; }
+.tasks-list-heading small { color:#8495b1; font-size:12px; font-weight:400; }
+.child-tasks-list { display:flex; flex-direction:column; gap:13px; }
+.child-task-detail { padding:18px; border:0; border-radius:21px; background:white; box-shadow:none; }
+.child-task-detail:nth-child(4n+1) { background:#e9f0ff; }
+.child-task-detail:nth-child(4n+2) { background:#efedff; }
+.child-task-detail:nth-child(4n+3) { background:#fff; }
+.child-task-detail:nth-child(4n) { background:#fff; }
+.child-task-detail .task-card-meta { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:16px; }
+.child-task-detail .task-reward-label { color:#4c60ff; font-size:16px; }
+.child-task-detail .task-status-pill { display:inline-flex; align-items:center; gap:5px; border-radius:20px; padding:5px 9px; white-space:nowrap; font-size:11px; }
+.child-task-detail .task-status-pill i { width:5px; height:5px; border-radius:50%; }
+.child-task-detail h3 { margin:0 0 7px; color:#29456f; font-size:18px; line-height:1.3; font-weight:500; }
+.child-task-detail>p { margin:0 0 14px; color:#40597f; font-size:13px; line-height:1.55; }
+.task-card-bottom { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 15px; color:#8495b1; font-size:11px; }
+.task-card-bottom time { display:flex; align-items:center; gap:5px; }
+.task-card-bottom small { font-size:11px; }
+.child-task-detail .child-task-submit { width:100%; min-height:49px; border-radius:13px; display:flex; justify-content:center; align-items:center; gap:8px; margin-top:0; font-size:13px; }
+.task-status-note { display:flex; align-items:center; gap:10px; padding:13px; border-radius:14px; margin-top:2px; font-size:12px; }
+.task-status-note span { display:flex; flex-direction:column; gap:4px; }
+.task-status-note small { font-size:11px; }
+.task-status-note.waiting { color:#a96b13; background:#fff4df; }
+.task-status-note.approved { color:#288b70; background:#e8f7f0; }
+.tasks-footer-note { text-align:center; color:#8495b1; font-size:12px; line-height:1.55; padding:14px 0 4px; }
+.child-tasks-screen .tasks-empty { background:white; border-radius:18px; padding:26px 18px; }
+@media (max-width:380px) {
+ .child-task-detail { padding:15px; }
+ .child-task-detail h3 { font-size:17px; }
+ .tasks-status-filters button { padding:0 9px; gap:6px; }
+}
