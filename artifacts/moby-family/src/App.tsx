@@ -51,7 +51,23 @@ function BottomNav({ active, onSelect, mode = 'child' }: { active: string; onSel
   return <><nav className="bottom-nav" aria-label="Основная навигация">{items.map(item=><button key={item.key} className={`nav-item ${active===item.key?'active':''}`} data-testid={`nav-${item.key}`} onClick={()=>onSelect(item.key)}><span className="nav-icon"><item.icon size={21} strokeWidth={active===item.key?2.2:1.8}/></span><span>{item.label}</span></button>)}</nav><div className="home-indicator"><i/></div></>;
 }
 function GoldenNut({ size = 25 }: { size?: number }) {
-  return <span className="golden-nut" style={{ width: size, height: size }} aria-label="золотой орех" role="img"><i /></span>;
+  return <svg className="golden-nut" width={size} height={size} viewBox="0 0 27 27" role="img" aria-label="золотой орех">
+    <defs>
+      <linearGradient id="golden-nut-shell" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#FFF0BB" />
+        <stop offset="45%" stopColor="#E9BF62" />
+        <stop offset="100%" stopColor="#BE8833" />
+      </linearGradient>
+      <linearGradient id="golden-nut-groove" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stopColor="#966D29" stopOpacity=".35" />
+        <stop offset="48%" stopColor="#966D29" stopOpacity=".95" />
+        <stop offset="100%" stopColor="#966D29" stopOpacity=".4" />
+      </linearGradient>
+    </defs>
+    <path d="M13.6 2.2C10.9.1 7.7 1.2 6.6 3.6 3.7 2.7 1.6 5.2 2.1 8.1.1 10.1.8 13.1 2.9 14.8 1.5 17.4 3 20.1 5.6 20.7 6.4 23.8 9.5 25.1 12.1 23.7 14.1 26.1 17.4 25.3 18.4 22.8 21.6 22.9 23.5 20.1 22.5 17.6 25 15.6 24.8 12.6 22.7 10.9 24.1 8 22.6 5.4 20 5.1 19.2 2.2 16.2 1 13.6 2.2Z" fill="url(#golden-nut-shell)" stroke="#966D29" strokeWidth=".8" strokeLinejoin="round"/>
+    <path d="M13.5 2.6C10.9 4.8 11.3 7.5 13 9.4 10.7 11.3 10.8 14.3 13.1 16.1 11.5 18.1 12 21.6 14.1 24" fill="none" stroke="url(#golden-nut-groove)" strokeWidth="1.1" strokeLinecap="round"/>
+    <path d="M7 4.1C8.7 5.4 9.3 7.3 8.7 9.1M4 12.1c2.2.1 3.6 1.4 3.7 3.5m12.2-8.1c-1.8 1.1-2.5 2.9-1.8 4.8m2.1 3.1c-2.2.1-3.4 1.6-3.3 3.7" fill="none" stroke="#966D29" strokeOpacity=".55" strokeWidth=".7" strokeLinecap="round"/>
+  </svg>;
 }
 function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
   const pct = Math.min(100, Math.round(goal.saved / goal.target * 100));
